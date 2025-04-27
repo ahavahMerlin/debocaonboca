@@ -36,7 +36,16 @@ client.on('qr', qr => {
     console.log('QR Code gerado. Escaneie com o WhatsApp.');
 });
 
-// Evento: Quando o cliente WhatsApp está pronto
+// Adicione este bloco de tratamento de erros
+client.on('auth_failure', msg => {
+    // Fired if WWebJS was unable to log into WA.
+    console.error('Falha na autenticação:', msg);
+});
+
+client.on('disconnected', (reason) => {
+    console.log('Cliente desconectado:', reason);
+});
+
 client.on('ready', () => {
     console.log('Tudo certo! WhatsApp conectado.');
 });
@@ -163,3 +172,5 @@ app.get('/', (req, res) => {
 app.listen(port, () => {
   console.log(`Servidor Express rodando na porta ${port}`);
 });
+
+client.initialize(); // Inicia o cliente

@@ -2,6 +2,11 @@
 const qrcode = require('qrcode-terminal');
 const { Client } = require('whatsapp-web.js');
 const fs = require('fs-extra'); // Adiciona o fs-extra
+const express = require('express'); // Adiciona o Express
+const app = express(); // Cria uma instância do Express
+
+// Define a porta que o servidor irá ouvir
+const port = process.env.PORT || 3000;
 
 // Caminho para o arquivo JSON onde vamos salvar os dados
 const DATA_FILE = 'data.json';
@@ -28,6 +33,7 @@ const client = new Client();
 // Evento: Quando o QR code é gerado
 client.on('qr', qr => {
     qrcode.generate(qr, {small: true});
+    console.log('QR Code gerado. Escaneie com o WhatsApp.');
 });
 
 // Evento: Quando o cliente WhatsApp está pronto
@@ -152,3 +158,8 @@ client.on('message', async msg => {
 
 // Inicializa o cliente WhatsApp
 client.initialize();
+
+// Inicia o servidor Express para "escutar" as requisições na porta definida
+app.listen(port, () => {
+  console.log(`Servidor Express rodando na porta ${port}`);
+});

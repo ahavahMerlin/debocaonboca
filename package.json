@@ -1,22 +1,31 @@
 {
+  "name": "debocaonbocachatbot",
+  "version": "1.0.0",
+  "description": "Chatbot para WhatsApp da DeBocaOnBoca",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "whatsapp",
+    "chatbot",
+    "debocaonboca",
+    "automação"
+  ],
+  "author": "Edison Cabistani Riella Sobrinho",
+  "license": "MIT",
   "dependencies": {
+    "express": "^4.18.3",
     "fs-extra": "^11.3.0",
     "qrcode-terminal": "^0.12.0",
     "whatsapp-web.js": "^1.27.0"
   },
-  "name": "debocaonbocachatbot",
-  "version": "1.0.0",
-  "main": "index.js",
-  "devDependencies": {},
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "devDependencies": {
+    "nodemon": "^3.1.0"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "engines": {
-  "node": "18.x"
-},
-"start": "node index.js"   
-  "description": ""
+    "node": "18.x"
+  }
 }

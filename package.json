@@ -6,7 +6,7 @@
   },
   "name": "debocaonbocachatbot",
   "version": "1.0.0",
-  "description": "",  // Movida para cá
+  "description": "",
   "main": "index.js",
   "devDependencies": {},
   "scripts": {
@@ -18,5 +18,5 @@
   "engines": {
     "node": "18.x"
   },
-  "start": "node index.js" ,  // Adicionada a vírgula
+  "start": "node index.js"
 }

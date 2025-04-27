@@ -6,7 +6,7 @@ const express = require('express'); // Adiciona o Express
 const app = express(); // Cria uma instância do Express
 
 // Define a porta que o servidor irá ouvir
-const port = process.env.PORT || 3000;
+const port = 3000; // MODIFICADO PARA FORÇAR A PORTA 3000
 
 // Caminho para o arquivo JSON onde vamos salvar os dados
 const DATA_FILE = 'data.json';
@@ -89,7 +89,14 @@ client.on('message', async msg => {
         existingData.push(userData); // Adiciona o novo usuário aos dados existentes
 
         await saveData(existingData); // Salva tudo no arquivo
+    } else if (['1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(msg.body) && msg.from.endsWith('@c.us')) {
+        // Chama a função para lidar com as opções
+        await handleOption(msg.body);
     }
+
+    const fimProcessamento = Date.now();
+    const tempoTotal = (fimProcessamento - inicioProcessamento) / 1000;
+    console.log(`Tempo total de processamento da mensagem: ${tempoTotal} segundos.`);
 
     // Função para lidar com as opções escolhidas pelo usuário
     async function handleOption(option) {
@@ -145,15 +152,6 @@ client.on('message', async msg => {
             }
         }
     }
-
-    // Chama a função para lidar com as opções
-    if (['1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(msg.body) && msg.from.endsWith('@c.us')) {
-        await handleOption(msg.body);
-    }
-
-    const fimProcessamento = Date.now();
-    const tempoTotal = (fimProcessamento - inicioProcessamento) / 1000;
-    console.log(`Tempo total de processamento da mensagem: ${tempoTotal} segundos.`);
 });
 
 // Rota para a página inicial

@@ -156,8 +156,10 @@ client.on('message', async msg => {
     console.log(`Tempo total de processamento da mensagem: ${tempoTotal} segundos.`);
 });
 
-// Inicializa o cliente WhatsApp
-client.initialize();
+// Rota para a página inicial
+app.get('/', (req, res) => {
+  res.send('Servidor está rodando! Chatbot WhatsApp DeBocaOnBoca.');
+});
 
 // Inicia o servidor Express para "escutar" as requisições na porta definida
 app.listen(port, () => {

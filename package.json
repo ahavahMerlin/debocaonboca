@@ -6,6 +6,7 @@
   },
   "name": "debocaonbocachatbot",
   "version": "1.0.0",
+  "description": "",  // Movida para cá
   "main": "index.js",
   "devDependencies": {},
   "scripts": {
@@ -15,8 +16,7 @@
   "author": "",
   "license": "ISC",
   "engines": {
-  "node": "18.x"
-},
-"start": "node index.js"   
-  "description": ""
+    "node": "18.x"
+  },
+  "start": "node index.js" ,  // Adicionada a vírgula
 }

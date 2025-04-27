@@ -17,7 +17,7 @@ async function loadData() {
         const data = await fs.readJson(DATA_FILE);
         return data;
     } catch (err) {
-        // Se o arquivo não existir ou der erro, retorna um objeto vazio
+        // Se o arquivo não existir ou der erro, retorna um array vazio
         return [];
     }
 }

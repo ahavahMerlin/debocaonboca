@@ -55,7 +55,7 @@ client.on('ready', () => {
         // Exemplo: client.sendMessage('5511912345678@c.us', 'Ping!');
         client.sendMessage('5512997507961@c.us', 'Ping!');
         console.log('Mensagem de Keep-Alive enviada.');
-    }, 60000); // Envia um ping a cada minuto (60000 milissegundos)
+    }, 120000); // Envia um ping a cada minuto (60000 milissegundos)
 });
 
 // Função auxiliar para criar um delay (pausa)

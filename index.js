@@ -84,7 +84,7 @@ client.on('message', async msg => {
         const name = contact.pushname ? contact.pushname : 'Cliente';
         console.log(`Nome do contato: ${name}`);
 
-        await client.sendMessage(msg.from, 'Olá! '+ name.split(" ")[0] + ', sou o assistente virtual da empresa DeBocaOnBoca. Como posso ajudá-lo(a) hoje? Não deixe de visitar e se inscrever em nosso Canal Youtube ( https://www.youtube.com/@debocaemboca2024/videos?sub_confirmation=l ) e seguir nosso Instagram ( https://www.instagram.com/debocaemboca2024/ ) Por favor, digite o *número* da opção desejada:\n\n1 - Ter um(a) Assistente Virtual Humanizado igual a este, atende clientes e qualifica LEADS com captação a partir de R$ 900,00 ou aprender a fazer um com templates e arquivos de configurações prontos\n2 - Tenha 3 consultas mensais (assinatura mensal) que vão otimizar seu negócio usando Soluções com Inteligência Artificial,\n Em diversas áreas\n Em CiberSegurança Famíliar, pequenas e Médias Empresas\n Em Marketing Digital\n Em Desenvolvimento de Aplicativos Mobile\n3 - Ser nosso sócio(a) parceiro(a) ganhos significativos em conta de participação\n4 - Economia de até 15% mensalmente e gratuitamente na sua conta de luz\n5 - Dossiê Pequeno; Médio ou Completo sobre quem lhe prejudicou, deu golpe ou quem você desconfia ou assinatura mensal R$ 150,00, com direito a 3 consultas mensais - Cada consulta adicional, R$ 100,00\n6 - Quer Renda Extra - Repeteco você vai se apaixonar\n7 - Backup completo do seu celular antes que seja tarde\n8 - Quer uma divulgação personalizada como esta, entre em contato\n9 - Outras perguntas');
+        await client.sendMessage(msg.from, 'Olá! '+ name.split(" ")[0] + ',\n\nSou Assistente Virtual da empresa DeBocaOnBoca. Como posso ajudá-lo(a) hoje?\n\nNão deixe de visitar e se inscrever em nosso Canal Youtube ( https://www.youtube.com/@debocaemboca2024/videos?sub_confirmation=l )\n\nE seguir nosso Instagram ( https://www.instagram.com/debocaemboca2024/ )\n\nPor favor, digite o *número* da opção desejada abaixo:\n\n1 - Ter um(a) Assistente Virtual Humanizado igual a este, atende clientes e qualifica LEADS com captação a partir de R$ 900,00 ou aprender a fazer um com templates e arquivos de configurações prontos\n\n2 - Tenha 3 consultas mensais por pequena assinatura mensal, que vão otimizar seu negócio usando Soluções com Inteligência Artificial,\nEm diversas áreas\nEm CiberSegurança Famíliar, pequenas e Médias Empresas\nEm Marketing Digital\nEm Desenvolvimento de Aplicativos Mobile\n\n3 - Ser nosso sócio(a) parceiro(a) com ganhos significativos em conta de participação\n\n4 - Economia de até 15% mensalmente e gratuitamente na sua conta de luz\n\n5 - Pequeno Dossiê; Médio ou Completo sobre quem lhe prejudicou, deu golpe ou quem de você desconfia ou por assinatura mensal R$ 150,00, com direito a 3 consultas mensais - Cada consulta adicional, R$ 100,00\n\n6 - Quer Renda Extra - Repeteco você vai se apaixonar\n\n7 - Backup completo do seu celular, antes que seja tarde\n\n8 - Quer divulgação personalizada como esta, entre em contato\n\n9 - Outras perguntas');
         console.log(`Mensagem de boas-vindas enviada.`);
 
         await delay(500);
@@ -112,7 +112,7 @@ client.on('message', async msg => {
     }
 
     const fimProcessamento = Date.now();
-    const tempoTotal = (fimProcessamento - inicioProcessamento) / 1000;
+    const tempoTotal = (fimProcessamento - inicioProcessamento) / 500;
     console.log(`Tempo total de processamento da mensagem: ${tempoTotal} segundos.`);
 
     // Função para lidar com as opções escolhidas pelo usuário

@@ -1,44 +1,43 @@
-// Importa as bibliotecas necessárias
 const qrcode = require('qrcode-terminal');
-const { Client } = require('whatsapp-web.js');
-const fs = require('fs-extra'); // Adiciona o fs-extra
-const express = require('express'); // Adiciona o Express
-const app = express(); // Cria uma instância do Express
+const { Client, LocalAuth } = require('whatsapp-web.js'); // Modifique esta linha
+const fs = require('fs-extra');
+const express = require('express');
+const app = express();
 
-// Define a porta que o servidor irá ouvir
-const port = 3000; // MODIFICADO PARA FORÇAR A PORTA 3000
-
-// Caminho para o arquivo JSON onde vamos salvar os dados
+const port = process.env.PORT || 3000; // Usar a porta fornecida pelo Render ou 3000 por padrão
 const DATA_FILE = 'data.json';
 
-// Função para carregar os dados existentes do arquivo JSON (se houver)
 async function loadData() {
     try {
         const data = await fs.readJson(DATA_FILE);
         return data;
     } catch (err) {
-        // Se o arquivo não existir ou der erro, retorna um array vazio
         return [];
     }
 }
 
-// Função para salvar os dados no arquivo JSON
 async function saveData(data) {
-    await fs.writeJson(DATA_FILE, data, { spaces: 2 }); // spaces: 2 formata o JSON para ficar mais legível
+    await fs.writeJson(DATA_FILE, data, { spaces: 2 });
 }
 
-// Cria uma nova instância do cliente WhatsApp
-const client = new Client();
+// Use LocalAuth para salvar e carregar a sessão
+const client = new Client({
+    authStrategy: new LocalAuth(),
+    puppeteer: {
+        headless: true, // Executar em modo headless (sem interface gráfica)
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+        ]
+    }
+});
 
-// Evento: Quando o QR code é gerado
 client.on('qr', qr => {
     qrcode.generate(qr, {small: true});
     console.log('QR Code gerado. Escaneie com o WhatsApp.');
 });
 
-// Adicione este bloco de tratamento de erros
 client.on('auth_failure', msg => {
-    // Fired if WWebJS was unable to log into WA.
     console.error('Falha na autenticação:', msg);
 });
 
@@ -51,21 +50,16 @@ client.on('ready', () => {
 
     // Implementação do Keep-Alive
     setInterval(() => {
-        // Substitua 'SEU_NUMERO@c.us' pelo seu número de telefone com o código do país e o sufixo @c.us
-        // Exemplo: client.sendMessage('5511912345678@c.us', 'Ping!');
         client.sendMessage('5512997507961@c.us', 'Ping!');
         console.log('Mensagem de Keep-Alive enviada.');
-    }, 120000); // Envia um ping a cada minuto (60000 milissegundos)
+    }, 240000);
 });
 
-// Função auxiliar para criar um delay (pausa)
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
-// Evento: Quando uma mensagem é recebida
 client.on('message', async msg => {
     const inicioProcessamento = Date.now();
 
-    // Verifica se a mensagem corresponde aos critérios e vem de um número válido do WhatsApp
     if (msg.body.match(/(menu|Menu|dia|tarde|noite|oi|Oi|Olá|olá|ola|Ola)/i) && msg.from.endsWith('@c.us')) {
         console.log(`Mensagem corresponde aos critérios, iniciando processamento...`);
 
@@ -94,20 +88,18 @@ client.on('message', async msg => {
         await delay(500);
         console.log(`Delay 4 concluído.`);
 
-        // Salva os dados do usuário (primeira interação)
         const userData = {
-            whatsapp: msg.from.replace('@c.us', ''), // Remove o @c.us do número
+            whatsapp: msg.from.replace('@c.us', ''),
             nome: name,
-            email: null, // Não temos o e-mail aqui, então deixamos como null
-            opcoes_escolhidas: [] // Inicialmente, nenhuma opção escolhida
+            email: null,
+            opcoes_escolhidas: []
         };
 
         const existingData = await loadData();
-        existingData.push(userData); // Adiciona o novo usuário aos dados existentes
+        existingData.push(userData);
 
-        await saveData(existingData); // Salva tudo no arquivo
+        await saveData(existingData);
     } else if (['1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(msg.body) && msg.from.endsWith('@c.us')) {
-        // Chama a função para lidar com as opções
         await handleOption(msg.body);
     }
 
@@ -115,7 +107,6 @@ client.on('message', async msg => {
     const tempoTotal = (fimProcessamento - inicioProcessamento) / 500;
     console.log(`Tempo total de processamento da mensagem: ${tempoTotal} segundos.`);
 
-    // Função para lidar com as opções escolhidas pelo usuário
     async function handleOption(option) {
         if (msg.from.endsWith('@c.us')) {
             const chat = await msg.getChat();
@@ -160,7 +151,6 @@ client.on('message', async msg => {
 
             await client.sendMessage(msg.from, responseMessage);
 
-            // Atualiza os dados do usuário com a opção escolhida
             const existingData = await loadData();
             const userIndex = existingData.findIndex(user => user.whatsapp === msg.from.replace('@c.us', ''));
             if (userIndex !== -1) {
@@ -171,14 +161,12 @@ client.on('message', async msg => {
     }
 });
 
-// Rota para a página inicial
 app.get('/', (req, res) => {
   res.send('Servidor está rodando! Chatbot WhatsApp DeBocaOnBoca.');
 });
 
-// Inicia o servidor Express para "escutar" as requisições na porta definida
 app.listen(port, () => {
   console.log(`Servidor Express rodando na porta ${port}`);
 });
 
-client.initialize(); // Inicia o cliente
+client.initialize();

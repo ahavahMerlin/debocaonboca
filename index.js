@@ -3,7 +3,7 @@ const { Client, LocalAuth } = require('whatsapp-web.js');
 const fs = require('fs-extra');
 const express = require('express');
 const app = express();
-const puppeteer = require('puppeteer-core');
+const puppeteer = require('puppeteer');
 const chromium = require('@sparticuz/chromium');
 
 const port = process.env.PORT || 3000;

@@ -31,7 +31,7 @@ const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
         headless: true,
-        executablePath: process.env.CHROME_PATH || await chromium.executablePath(),
+        executablePath: await chromium.executablePath(), // Remova a verificação da variável de ambiente
         args: chromium.args,
     }
 });

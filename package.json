@@ -19,10 +19,10 @@
   "dependencies": {
     "express": "^4.21.2",
     "fs-extra": "^11.3.0",
-    "puppeteer": "^22.15.0",
+    "puppeteer": "^22.15.0",    
     "qrcode-terminal": "^0.12.0",
     "whatsapp-web.js": "^1.27.0"
-  },
+	 	 
   "devDependencies": {
     "nodemon": "^3.1.0"
   },

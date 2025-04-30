@@ -3,6 +3,8 @@ const { Client, LocalAuth } = require('whatsapp-web.js');
 const fs = require('fs-extra');
 const express = require('express');
 const app = express();
+const puppeteer = require('puppeteer-core'); // Importe puppeteer-core
+const chromium = require('@sparticuz/chromium');  // Importe o chromium
 
 const port = process.env.PORT || 3000;
 const DATA_FILE = 'data.json';
@@ -29,10 +31,8 @@ const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
         headless: true,
-        args: [
-            '--no-sandbox',
-            '--disable-setuid-sandbox',
-        ],
+        executablePath: process.env.CHROME_PATH || await chromium.executablePath(),
+        args: chromium.args,
     }
 });
 

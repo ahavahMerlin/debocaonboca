@@ -31,7 +31,7 @@ async function initializeClient() {
         authStrategy: new LocalAuth(),
         puppeteer: {
             headless: true,
-            executablePath: process.env.RENDER ? undefined : 'C:\\Users\\venda\\AppData\\Local\\Google\\Chrome SxS\\Application\\chrome.exe',
+            executablePath: !process.env.RENDER ? 'C:\\Users\\venda\\AppData\\Local\\Google\\Chrome SxS\\Application\\chrome.exe' : chromium.executablePath,
             args: chromium.args,
         }
     });

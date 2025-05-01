@@ -1,6 +1,5 @@
 const qrcode = require('qrcode-terminal');
 const { Client, LocalAuth } = require('whatsapp-web.js');
-const fs = require('fs'); // Importe o módulo 'fs'
 const fsExtra = require('fs-extra');
 const express = require('express');
 const app = express();
@@ -27,12 +26,12 @@ async function saveData(data) {
     }
 }
 
-async function initializeClient() { // Criar uma função assíncrona para inicializar o cliente
+async function initializeClient() {
     const client = new Client({
         authStrategy: new LocalAuth(),
         puppeteer: {
             headless: true,
-            executablePath: fs.existsSync('/opt/render/project/src/node_modules/puppeteer/.local-chromium') ? undefined : 'C:\\Users\\venda\\AppData\\Local\\Google\\Chrome SxS\\Application\\chrome.exe',
+            executablePath: process.env.RENDER ? undefined : 'C:\\Users\\venda\\AppData\\Local\\Google\\Chrome SxS\\Application\\chrome.exe',
             args: chromium.args,
         }
     });

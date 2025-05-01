@@ -32,7 +32,7 @@ async function initializeClient() { // Criar uma função assíncrona para inici
         authStrategy: new LocalAuth(),
         puppeteer: {
             headless: true,
-            executablePath: 'C:\\Users\\venda\\AppData\\Local\\Google\\Chrome SxS\\Application\\chrome.exe', // Use barras duplas para escapar as barras invertidas
+            // executablePath: 'C:\\Users\\venda\\AppData\\Local\\Google\\Chrome SxS\\Application\\chrome.exe', // Remova esta linha
             args: chromium.args,
         }
     });

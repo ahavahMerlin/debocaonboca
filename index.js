@@ -2,12 +2,13 @@ const qrcode = require('qrcode-terminal');
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const fsExtra = require('fs-extra');
 const express = require('express');
-const app = express();
 const chromium = require('@sparticuz/chromium');
 
+const app = express();
 const port = process.env.PORT || 3000;
 const DATA_FILE = 'data.json';
 
+// Função para carregar os dados (mantida)
 async function loadData() {
     try {
         const data = await fsExtra.readJson(DATA_FILE);
@@ -18,6 +19,7 @@ async function loadData() {
     }
 }
 
+// Função para salvar os dados (mantida)
 async function saveData(data) {
     try {
         await fsExtra.writeJson(DATA_FILE, data, { spaces: 2 });
@@ -26,13 +28,16 @@ async function saveData(data) {
     }
 }
 
+// Função para inicializar o cliente WhatsApp
 async function initializeClient() {
     let executablePath;
 
     if (process.env.RENDER) {
         executablePath = await chromium.executablePath();
     } else {
-        executablePath = 'C:\\Users\\venda\\AppData\\Local\\Google\\Chrome SxS\\Application\\chrome.exe';
+        // Remova este caminho fixo. Use apenas para testes locais, se necessário
+        // executablePath = 'C:\\Users\\venda\\AppData\\Local\\Google\\Chrome SxS\\Application\\chrome.exe';
+        executablePath = null; // Ou deixe como null para usar o Chrome padrão
     }
 
     const client = new Client({
@@ -61,11 +66,12 @@ async function initializeClient() {
     client.on('ready', () => {
         console.log('Tudo certo! WhatsApp conectado.');
 
-        // Implementação do Keep-Alive
-        setInterval(() => {
-            client.sendMessage('5512997507961@c.us', 'Ping!');
-            console.log('Mensagem de Keep-Alive enviada.');
-        }, 240000);
+        // Implementação do Keep-Alive (Removido para simplificar inicialmente)
+        // Remova ou ajuste conforme necessário após o bot estar estável
+        // setInterval(() => {
+        //     client.sendMessage('5512997507961@c.us', 'Ping!');
+        //     console.log('Mensagem de Keep-Alive enviada.');
+        // }, 240000);
     });
 
     client.on('authenticated', (session) => {
@@ -73,6 +79,7 @@ async function initializeClient() {
     });
 
     client.on('message', async msg => {
+        // Seu código de tratamento de mensagens (mantido como está)
         const inicioProcessamento = Date.now();
 
         // Log da mensagem recebida
@@ -194,6 +201,7 @@ async function initializeClient() {
     return client; // AQUI - Retorna o cliente corretamente
 }
 
+// Inicialização do Express (mantida)
 app.get('/', (req, res) => {
     res.send('Servidor está rodando! Chatbot WhatsApp DeBocaOnBoca.');
 });
@@ -202,12 +210,14 @@ app.listen(port, () => {
     console.log(`Servidor Express rodando na porta ${port}`);
 });
 
+// Inicialização do cliente WhatsApp
 async function start() {
     const client = await initializeClient();
     client.initialize();
 }
 start();
 
+// Função de delay (mantida)
 function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }

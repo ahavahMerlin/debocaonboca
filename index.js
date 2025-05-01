@@ -28,6 +28,11 @@ async function saveData(data) {
     }
 }
 
+// Função de delay (mantida)
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 // Função para inicializar o cliente WhatsApp
 async function initializeClient() {
     let executablePath;
@@ -79,40 +84,34 @@ async function initializeClient() {
     });
 
     client.on('message', async msg => {
-        // Seu código de tratamento de mensagens (mantido como está)
-        const inicioProcessamento = Date.now();
+        try {
+            // Seu código de tratamento de mensagens (mantido como está)
+            const inicioProcessamento = Date.now();
 
-        // Log da mensagem recebida
-        console.log(`Mensagem recebida: ${msg.body} de ${msg.from}`);
+            // Log da mensagem recebida
+            console.log(`Mensagem recebida: ${msg.body} de ${msg.from}`);
 
-        if (msg.body.match(/(menu|Menu|dia|tarde|noite|oi|Oi|Olá|olá|ola|Ola)/i) && msg.from.endsWith('@c.us')) {
-            console.log(`Mensagem corresponde aos critérios, iniciando processamento...`);
+            if (msg.body.match(/(menu|Menu|dia|tarde|noite|oi|Oi|Olá|olá|ola|Ola)/i) && msg.from.endsWith('@c.us')) {
+                console.log(`Mensagem corresponde aos critérios, iniciando processamento...`);
 
-            try {
                 const chat = await msg.getChat();
                 console.log(`Chat obtido.`);
 
                 await delay(500);
-                console.log(`Delay 1 concluído.`);
                 await chat.sendStateTyping();
-                console.log(`Simulação de digitação enviada.`);
                 await delay(500);
-                console.log(`Delay 2 concluído.`);
                 const contact = await msg.getContact();
                 console.log(`Informações do contato obtidas.`);
 
                 const name = contact.pushname ? contact.pushname : 'Cliente';
                 console.log(`Nome do contato: ${name}`);
 
-                await client.sendMessage(msg.from, 'Olá! ' + name.split(" ")[0] + ',\n\nSou Assistente Virtual da empresa DeBocaOnBoca. Como posso ajudá-lo(a) hoje?\n\nNão deixe de visitar e se inscrever em nosso Canal Youtube ( https://www.youtube.com/@debocaemboca2024/videos?sub_confirmation=l )\n\nE seguir nosso Instagram ( https://www.instagram.com/debocaemboca2024/ )\n\nPor favor, digite o *número* da opção desejada abaixo:\n\n1 - Ter um(a) Assistente Virtual Humanizado igual a este, atende clientes e qualifica LEADS com captação a partir de R$ 900,00 ou aprender a fazer um com templates e arquivos de configurações prontos\n\n2 - Tenha 3 consultas mensais por pequena assinatura mensal, que vão otimizar seu negócio usando Soluções com Inteligência Artificial,\nEm diversas áreas\nEm CiberSegurança Famíliar, pequenas e Médias Empresas\nEm Marketing Digital\nEm Desenvolvimento de Aplicativos Mobile\n\n3 - Ser nosso sócio(a) parceiro(a) com ganhos significativos em conta de participação\n\n4 - Economia de até 15% mensalmente e gratuitamente na sua conta de luz\n\n5 - Pequeno Dossiê; Médio ou Completo sobre quem lhe prejudicou, deu golpe ou quem de você desconfia ou por assinatura mensal R$ 150,00, com direito a 3 consultas mensais - Cada consulta adicional, R$ 100,00\n\n6 - Quer Renda Extra - Repeteco você vai se apaixonar\n\n7 - Backup completo do seu celular, antes que seja tarde\n\n8 - Quer divulgação personalizada como esta, entre em contato\n\n9 - Outras perguntas');
+                await client.sendMessage(msg.from, `Olá! ${name.split(" ")[0]},\n\nSou Assistente Virtual da empresa DeBocaOnBoca. Como posso ajudá-lo(a) hoje?\n\nNão deixe de visitar e se inscrever em nosso Canal Youtube ( https://www.youtube.com/@debocaemboca2024/videos?sub_confirmation=l )\n\nE seguir nosso Instagram ( https://www.instagram.com/debocaemboca2024/ )\n\nPor favor, digite o *número* da opção desejada abaixo:\n\n1 - Ter um(a) Assistente Virtual Humanizado igual a este, atende clientes e qualifica LEADS com captação a partir de R$ 900,00 ou aprender a fazer um com templates e arquivos de configurações prontos\n\n2 - Tenha 3 consultas mensais por pequena assinatura mensal, que vão otimizar seu negócio usando Soluções com Inteligência Artificial,\nEm diversas áreas\nEm CiberSegurança Famíliar, pequenas e Médias Empresas\nEm Marketing Digital\nEm Desenvolvimento de Aplicativos Mobile\n\n3 - Ser nosso sócio(a) parceiro(a) com ganhos significativos em conta de participação\n\n4 - Economia de até 15% mensalmente e gratuitamente na sua conta de luz\n\n5 - Pequeno Dossiê; Médio ou Completo sobre quem lhe prejudicou, deu golpe ou quem de você desconfia ou por assinatura mensal R$ 150,00, com direito a 3 consultas mensais - Cada consulta adicional, R$ 100,00\n\n6 - Quer Renda Extra - Repeteco você vai se apaixonar\n\n7 - Backup completo do seu celular, antes que seja tarde\n\n8 - Quer divulgação personalizada como esta, entre em contato\n\n9 - Outras perguntas`);
                 console.log(`Mensagem de boas-vindas enviada.`);
 
                 await delay(500);
-                console.log(`Delay 3 concluído.`);
                 await chat.sendStateTyping();
-                console.log(`Simulação de digitação enviada.`);
                 await delay(500);
-                console.log(`Delay 4 concluído.`);
 
                 const userData = {
                     whatsapp: msg.from.replace('@c.us', ''),
@@ -121,28 +120,21 @@ async function initializeClient() {
                     opcoes_escolhidas: []
                 };
 
-                const existingData = await loadData();
+                let existingData = await loadData();
+                existingData = Array.isArray(existingData) ? existingData : []; // Garante que existingData seja um array
                 existingData.push(userData);
 
                 await saveData(existingData);
-            } catch (error) {
-                console.error('Erro ao processar a mensagem inicial:', error);
-            }
-        } else if (['1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(msg.body) && msg.from.endsWith('@c.us')) {
-            try {
+            } else if (['1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(msg.body) && msg.from.endsWith('@c.us')) {
                 await handleOption(msg.body);
-            } catch (error) {
-                console.error('Erro ao processar a opção escolhida:', error);
             }
-        }
 
-        const fimProcessamento = Date.now();
-        const tempoTotal = (fimProcessamento - inicioProcessamento) / 1000; // Tempo em segundos
-        console.log(`Tempo total de processamento da mensagem: ${tempoTotal} segundos.`);
+            const fimProcessamento = Date.now();
+            const tempoTotal = (fimProcessamento - inicioProcessamento) / 1000; // Tempo em segundos
+            console.log(`Tempo total de processamento da mensagem: ${tempoTotal} segundos.`);
 
-        async function handleOption(option) {
-            if (msg.from.endsWith('@c.us')) {
-                try {
+            async function handleOption(option) {
+                if (msg.from.endsWith('@c.us')) {
                     const chat = await msg.getChat();
 
                     await delay(500);
@@ -185,20 +177,21 @@ async function initializeClient() {
 
                     await client.sendMessage(msg.from, responseMessage);
 
-                    const existingData = await loadData();
+                    let existingData = await loadData();
+                    existingData = Array.isArray(existingData) ? existingData : []; // Garante que existingData seja um array
                     const userIndex = existingData.findIndex(user => user.whatsapp === msg.from.replace('@c.us', ''));
                     if (userIndex !== -1) {
                         existingData[userIndex].opcoes_escolhidas.push(option);
                         await saveData(existingData);
                     }
-                } catch (error) {
-                    console.error('Erro ao lidar com a opção:', error);
                 }
             }
+        } catch (error) {
+            console.error('Erro ao processar a mensagem:', error);
         }
-    }); // AQUI - Fechamento do client.on('message')
+    });
 
-    return client; // AQUI - Retorna o cliente corretamente
+    return client;
 }
 
 // Inicialização do Express (mantida)
@@ -212,12 +205,12 @@ app.listen(port, () => {
 
 // Inicialização do cliente WhatsApp
 async function start() {
-    const client = await initializeClient();
-    client.initialize();
+    try {
+        const client = await initializeClient();
+        await client.initialize();
+    } catch (error) {
+        console.error('Erro ao inicializar o cliente:', error);
+    }
 }
-start();
 
-// Função de delay (mantida)
-function delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
+start();

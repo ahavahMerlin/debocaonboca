@@ -188,24 +188,26 @@ async function initializeClient() {
                     console.error('Erro ao lidar com a opção:', error);
                 }
             }
-        });
-        return client;
-    }
+        }
+    }); // AQUI - Fechamento do client.on('message')
 
-    app.get('/', (req, res) => {
-        res.send('Servidor está rodando! Chatbot WhatsApp DeBocaOnBoca.');
-    });
+    return client; // AQUI - Retorna o cliente corretamente
+}
 
-    app.listen(port, () => {
-        console.log(`Servidor Express rodando na porta ${port}`);
-    });
+app.get('/', (req, res) => {
+    res.send('Servidor está rodando! Chatbot WhatsApp DeBocaOnBoca.');
+});
 
-    async function start() {
-        const client = await initializeClient();
-        client.initialize();
-    }
-    start();
+app.listen(port, () => {
+    console.log(`Servidor Express rodando na porta ${port}`);
+});
 
-    function delay(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
+async function start() {
+    const client = await initializeClient();
+    client.initialize();
+}
+start();
+
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}

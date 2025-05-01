@@ -1,9 +1,9 @@
 const qrcode = require('qrcode-terminal');
 const { Client, LocalAuth } = require('whatsapp-web.js');
-const fs = require('fs-extra');
+const fs = require('fs'); // Importe o módulo 'fs'
+const fsExtra = require('fs-extra');
 const express = require('express');
 const app = express();
-const puppeteer = require('puppeteer');
 const chromium = require('@sparticuz/chromium');
 
 const port = process.env.PORT || 3000;
@@ -11,7 +11,7 @@ const DATA_FILE = 'data.json';
 
 async function loadData() {
     try {
-        const data = await fs.readJson(DATA_FILE);
+        const data = await fsExtra.readJson(DATA_FILE);
         return data;
     } catch (err) {
         console.warn('Erro ao carregar os dados:', err);
@@ -21,7 +21,7 @@ async function loadData() {
 
 async function saveData(data) {
     try {
-        await fs.writeJson(DATA_FILE, data, { spaces: 2 });
+        await fsExtra.writeJson(DATA_FILE, data, { spaces: 2 });
     } catch (err) {
         console.error('Erro ao salvar os dados:', err);
     }
@@ -32,7 +32,7 @@ async function initializeClient() { // Criar uma função assíncrona para inici
         authStrategy: new LocalAuth(),
         puppeteer: {
             headless: true,
-            // executablePath: 'C:\\Users\\venda\\AppData\\Local\\Google\\Chrome SxS\\Application\\chrome.exe', // Remova esta linha
+            executablePath: fs.existsSync('/opt/render/project/src/node_modules/puppeteer/.local-chromium') ? undefined : 'C:\\Users\\venda\\AppData\\Local\\Google\\Chrome SxS\\Application\\chrome.exe',
             args: chromium.args,
         }
     });

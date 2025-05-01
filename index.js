@@ -27,11 +27,19 @@ async function saveData(data) {
 }
 
 async function initializeClient() {
+    let executablePath;
+
+    if (process.env.RENDER) {
+        executablePath = await chromium.executablePath();
+    } else {
+        executablePath = 'C:\\Users\\venda\\AppData\\Local\\Google\\Chrome SxS\\Application\\chrome.exe';
+    }
+
     const client = new Client({
         authStrategy: new LocalAuth(),
         puppeteer: {
             headless: true,
-            executablePath: !process.env.RENDER ? 'C:\\Users\\venda\\AppData\\Local\\Google\\Chrome SxS\\Application\\chrome.exe' : chromium.executablePath,
+            executablePath: executablePath,
             args: chromium.args,
         }
     });
@@ -180,25 +188,24 @@ async function initializeClient() {
                     console.error('Erro ao lidar com a opção:', error);
                 }
             }
-        }
+        });
+        return client;
+    }
+
+    app.get('/', (req, res) => {
+        res.send('Servidor está rodando! Chatbot WhatsApp DeBocaOnBoca.');
     });
-    return client;
-}
 
-app.get('/', (req, res) => {
-    res.send('Servidor está rodando! Chatbot WhatsApp DeBocaOnBoca.');
-});
+    app.listen(port, () => {
+        console.log(`Servidor Express rodando na porta ${port}`);
+    });
 
-app.listen(port, () => {
-    console.log(`Servidor Express rodando na porta ${port}`);
-});
+    async function start() {
+        const client = await initializeClient();
+        client.initialize();
+    }
+    start();
 
-async function start() {
-    const client = await initializeClient();
-    client.initialize();
-}
-start();
-
-function delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
+    function delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }

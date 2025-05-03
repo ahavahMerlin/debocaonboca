@@ -3,7 +3,6 @@ const { Client, LocalAuth } = require('whatsapp-web.js');
 const fsExtra = require('fs-extra');
 const express = require('express');
 const chromium = require('@sparticuz/chromium');
-
 const app = express();
 const port = process.env.PORT || 3000;
 const DATA_FILE = 'data.json';
@@ -39,6 +38,7 @@ function delay(ms) {
 }
 
 // ---------------------- Inicialização do Cliente WhatsApp ----------------------
+
 async function initializeClient() {
     let executablePath = null;
     let headlessMode = true; // Modo headless padrão
@@ -182,7 +182,6 @@ async function handleOption(option, msg, client) {
     if (msg.from.endsWith('@c.us')) {
         try {
             const chat = await msg.getChat();
-
             await delay(500);
             await chat.sendStateTyping();
             await delay(500);
@@ -231,6 +230,7 @@ async function handleOption(option, msg, client) {
 }
 
 // ---------------------- Inicialização do Servidor Express ----------------------
+
 app.get('/', (req, res) => {
     res.send('Servidor está rodando! Chatbot WhatsApp DeBocaOnBoca.');
 });
@@ -240,6 +240,7 @@ app.listen(port, () => {
 });
 
 // ---------------------- Função Principal de Inicialização ----------------------
+
 async function start() {
     try {
         const client = await initializeClient();

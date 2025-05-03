@@ -66,6 +66,7 @@ async function initializeClient() {
             executablePath: executablePath, // Caminho para o executável do Chrome
             args: chromium.args, // Argumentos do Chromium (necessários no Render)
             ignoreDefaultArgs: useChrome ? ['--disable-extensions'] : [], // Desativa extensões se usar Chrome
+            //  defaultViewport: null, // Removido para evitar problemas em alguns casos
             timeout: 60000 // Tempo limite para as operações do Puppeteer (em milissegundos)
         }
     });
@@ -164,7 +165,7 @@ async function initializeClient() {
                 // Salva os dados atualizados
                 await saveData(existingData);
             }
-            // Verifica se a mensagem é uma opção válida (1 a 9)
+            // Verifica se a mensagem é uma opção válida (1 a 5)
             else if (['1', '2', '3', '4', '5'].includes(msg.body) && msg.from.endsWith('@c.us')) {  // Removi 6 7 8 9 pois não existem opções
                 // Chama a função para lidar com a opção
                 await handleOption(msg.body, msg, client);

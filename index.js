@@ -165,7 +165,7 @@ async function initializeClient() {
                 await saveData(existingData);
             }
             // Verifica se a mensagem é uma opção válida (1 a 9)
-            else if (['1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(msg.body) && msg.from.endsWith('@c.us')) {
+            else if (['1', '2', '3', '4', '5'].includes(msg.body) && msg.from.endsWith('@c.us')) {  // Removi 6 7 8 9 pois não existem opções
                 // Chama a função para lidar com a opção
                 await handleOption(msg.body, msg, client);
             }
@@ -195,21 +195,21 @@ async function handleOption(option, msg, client) {
             let responseMessage = '';
 
             switch (option) {
-                            case '1':
-                                responseMessage = 'Link para cadastro: https://sites.google.com/view/solucoes-em-ia\n\nTer um(a) Assistente Virtual que atende seus clientes e qualifica LEADS com captação a partir de R$ 1.500,00\n\n*Pagamento 50% Assistente Virtial:* R$ 750,00 MercadoPago Pix E-mail vendamais@gmail.com ou com cartão\n\nTer os templates e arquivos de configurações prontos, mais nosso suporte remote pelo AnyDesk\n\n**Pagamento 50% pelos templates e arquivos de configurações prontos:\n\n* R$ 1.00,00 MercadoPago Pix E-mail vendamais@gmail.com ou com cartão\n\nAgende um contato: WhatsApp (12) 98.138.3348.';
-                                break;
-                            case '2':
-                                responseMessage = 'Link para cadastro: https://sites.google.com/view/solucoes-em-ia\n\nTenha 3 consultas mensais que vão otimizar seu negócio nas Soluções em IA e suporte via remoto através do AnyDesk *Assinatura Mensal:* R$ 99,90 MercadoPago Pix E-mail vendamais@gmail.com ou com cartão\n\nAgende um contato: WhatsApp (12) 98.138.3348.';
-                                break;
-                            case '3':
-                                responseMessage = 'Link para cadastro: https://sites.google.com/view/solucoes-em-ia\n\nSaiba, antes que seja tarde, com quem se relaciona, quem lhe deu um golpe ou de quem você desconfia, a partir de qualquer pequena informação ou detalhe, cpf, nome completo, endereço, cep, placa de carro e outros.\nPequeno Dossiê R$ 75,00.\nMédio Dossiê R$ 150;00.\nCompleto Dossiê R$ 300,00.\n Assinatura Mensal R$ 150,00, com direito a 3 consultas mensais - Cada consulta adicional, R$ 100,00\nPix MercadoPago E-mail vendamais@gmail.com ou com cartão\n\nAgende um contato: WhatsApp (12) 98.138.3348.';
-                                break;
-                            case '4':
-                                responseMessage = 'Agende um contato: WhatsApp (12) 98.138.3348.';
-                                break;
-                            case '5:
-                                responseMessage = 'Se tiver outras dúvidas ou precisar de mais informações, por favor, escreva aqui, visite nosso site: https://sites.google.com/view/solucoes-em-ia/\n\n ou Agende um contato: WhatsApp (12) 98.138.3348.';
-                                break;
+                case '1':
+                    responseMessage = 'Link para cadastro: https://sites.google.com/view/solucoes-em-ia\n\nTer um(a) Assistente Virtual que atende seus clientes e qualifica LEADS com captação a partir de R$ 1.500,00\n\n*Pagamento 50% Assistente Virtial:* R$ 750,00 MercadoPago Pix E-mail vendamais@gmail.com ou com cartão\n\nTer os templates e arquivos de configurações prontos, mais nosso suporte remote pelo AnyDesk\n\n**Pagamento 50% pelos templates e arquivos de configurações prontos:\n\n* R$ 1.00,00 MercadoPago Pix E-mail vendamais@gmail.com ou com cartão\n\nAgende um contato: WhatsApp (12) 98.138.3348.';
+                    break;
+                case '2':
+                    responseMessage = 'Link para cadastro: https://sites.google.com/view/solucoes-em-ia\n\nTenha 3 consultas mensais que vão otimizar seu negócio nas Soluções em IA e suporte via remoto através do AnyDesk *Assinatura Mensal:* R$ 99,90 MercadoPago Pix E-mail vendamais@gmail.com ou com cartão\n\nAgende um contato: WhatsApp (12) 98.138.3348.';
+                    break;
+                case '3':
+                    responseMessage = 'Link para cadastro: https://sites.google.com/view/solucoes-em-ia\n\nSaiba, antes que seja tarde, com quem se relaciona, quem lhe deu um golpe ou de quem você desconfia, a partir de qualquer pequena informação ou detalhe, cpf, nome completo, endereço, cep, placa de carro e outros.\nPequeno Dossiê R$ 75,00.\nMédio Dossiê R$ 150;00.\nCompleto Dossiê R$ 300,00.\n Assinatura Mensal R$ 150,00, com direito a 3 consultas mensais - Cada consulta adicional, R$ 100,00\nPix MercadoPago E-mail vendamais@gmail.com ou com cartão\n\nAgende um contato: WhatsApp (12) 98.138.3348.';
+                    break;
+                case '4':
+                    responseMessage = 'Agende um contato: WhatsApp (12) 98.138.3348.';
+                    break;
+                case '5':
+                    responseMessage = 'Se tiver outras dúvidas ou precisar de mais informações, por favor, escreva aqui, visite nosso site: https://sites.google.com/view/solucoes-em-ia/\n\n ou Agende um contato: WhatsApp (12) 98.138.3348.';
+                    break;
                 default:
                     responseMessage = 'Opção inválida.';
             }

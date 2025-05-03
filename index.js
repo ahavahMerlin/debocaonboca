@@ -118,7 +118,7 @@ async function initializeClient() {
     client.on('message', async msg => {
         try {
             const inicioProcessamento = Date.now();
-            console.log(`Mensagem recebida: ${msg.body} de ${msg.from}`);
+            //console.log(`Mensagem recebida: ${msg.body} de ${msg.from}`);
 
             // Verifica se a mensagem corresponde aos critérios do menu
             if (msg.body.match(/(menu|Menu|dia|tarde|noite|oi|Oi|Olá|olá|ola|Ola)/i) && msg.from.endsWith('@c.us')) {
@@ -138,7 +138,7 @@ async function initializeClient() {
                 console.log(`Nome do contato: ${name}`);
 
                 // Envia a mensagem de boas-vindas formatada
-                await client.sendMessage(msg.from, `Olá! ${name.split(" ")[0]},\n\nSou Assistente Virtual da empresa DeBocaOnBoca. Como posso ajudá-lo(a) hoje?\n\nNão deixe de visitar e se inscrever em nosso Canal Youtube (https://www.youtube.com/@debocaemboca2024/videos?sub_confirmation=1)\n\nE seguir nosso Instagram (https://www.instagram.com/debocaemboca2024/)\n\nPor favor, digite o *número* da opção desejada abaixo:\n\n1 - Ter um(a) Assistente Virtual Humanizado igual a este, atende clientes e qualifica LEADS com captação a partir de R$ 900,00 ou aprender a fazer um com templates e arquivos de configurações prontos\n\n2 - Tenha 3 consultas mensais por pequena assinatura mensal, que vão otimizar seu negócio usando Soluções com Inteligência Artificial,\nEm diversas áreas\nEm CiberSegurança Famíliar, pequenas e Médias Empresas\nEm Marketing Digital\nEm Desenvolvimento de Aplicativos Mobile\n\n3 - Ser nosso sócio(a) parceiro(a) com ganhos significativos em conta de participação\n\n4 - Economia de até 15% mensalmente e gratuitamente na sua conta de luz\n\n5 - Pequeno Dossiê; Médio ou Completo sobre quem lhe prejudicou, deu golpe ou quem de você desconfia ou por assinatura mensal R$ 150,00, com direito a 3 consultas mensais - Cada consulta adicional, R$ 100,00\n\n6 - Quer Renda Extra - Repeteco você vai se apaixonar\n\n7 - Backup completo do seu celular, antes que seja tarde\n\n8 - Quer divulgação personalizada como esta, entre em contato\n\n9 - Outras perguntas`);
+                await client.sendMessage(msg.from, `Olá! ${name.split(" ")[0]},\n\nSou Midiã represento a empresa DeBocaOnBoca. Como posso ajudá-lo(a) hoje?\n\nNão deixe de visitar e se inscrever em nosso Canal Youtube (https://www.youtube.com/@debocaemboca2024/videos?sub_confirmation=1)\n\nE seguir nosso Instagram (https://www.instagram.com/debocaemboca2024/)\n\nPor favor, digite o *número* da opção desejada abaixo:\n\n1 - Ter um(a) Assistente Virtual Humanizado que atende seus clientes e qualifica LEADS com captação a partir de R$ 1.500,00 ou ter os templates e arquivos de configurações prontos, mais nosso suporte remote pelo AnyDesk\n\n2 - Tenha 3 consultas mensais por pequena assinatura mensal, que vão otimizar seu negócio usando Soluções com Inteligência Artificial,\nEm diversas áreas\nEm CiberSegurança Famíliar, pequenas e Médias Empresas\nEm Marketing Digital\nEm Desenvolvimento de Aplicativos Mobile\n\n3 - Pequeno Dossiê; Médio ou Completo sobre quem lhe prejudicou, deu golpe ou quem de você desconfia ou por assinatura mensal R$ 150,00, com direito a 3 consultas mensais - Cada consulta adicional, R$ 100,00\n\n4 - Quer divulgação personalizada como esta, entre em contato\n\n5 - Outras perguntas`);
 
                 console.log(`Mensagem de boas-vindas enviada.`);
 
@@ -195,33 +195,21 @@ async function handleOption(option, msg, client) {
             let responseMessage = '';
 
             switch (option) {
-                case '1':
-                    responseMessage = 'Link para cadastro: https://sites.google.com/view/solucoes-em-ia\n\nReceba o passo a passo, templates e arquivos de configuração, damos suporte na instalação via remoto através do AnyDesk *Pagamento:* A partir de R$ 500,00 à vista MercadoPago Pix E-mail vendamais@gmail.com ou com cartão.';
-                    break;
-                case '2':
-                    responseMessage = 'Link para cadastro: https://sites.google.com/view/solucoes-em-ia\n\nTenha 3 consultas mensais que vão otimizar seu negócio nas Soluções em IA e suporte via remoto através do AnyDesk *Assinatura Mensal:* R$ 99,90 à vista MercadoPago Pix E-mail vendamais@gmail.com pode pagar com cartão.';
-                    break;
-                case '3':
-                    responseMessage = 'Informações ao final na página e Link para cadastro: https://sites.google.com/view/solucoes-em-ia';
-                    break;
-                case '4':
-                    responseMessage = 'DeBocaOnBoca Energia Solar: https://debocaembocaenergiasolar.vendasmais.com/';
-                    break;
-                case '5':
-                    responseMessage = 'Link para cadastro: https://sites.google.com/view/solucoes-em-ia\n\nSaiba, antes que seja tarde, com quem se relaciona, quem lhe deu um golpe ou de quem você desconfia, a partir de qualquer pequena informação ou detalhe, cpf, nome completo, endereço, cep, placa de carro e outros.\nPequeno Dossiê R$ 75,00.\nMédio Dossiê R$ 150;00.\nCompleto Dossiê R$ 300,00.\n Assinatura Mensal R$ 150,00, com direito a 3 consultas mensais - Cada consulta adicional, R$ 100,00\nPix MercadoPago E-mail vendamais@gmail.com.\nWhatsApp (12) 99.750.7961.';
-                    break;
-                case '6':
-                    responseMessage = 'Link para cadastro: https://sites.google.com/view/debocaonboca-repeteco';
-                    break;
-                case '7':
-                    responseMessage = 'Serviço presencial, agendar entre em contato: WhatsApp (12) 99.750.7961.';
-                    break;
-                case '8':
-                    responseMessage = 'Entre em contato: WhatsApp (12) 99.750.7961.';
-                    break;
-                case '9':
-                    responseMessage = 'Se tiver outras dúvidas ou precisar de mais informações, por favor, escreva aqui ou visite nosso site: https://sites.google.com/view/solucoes-em-ia/';
-                    break;
+                            case '1':
+                                responseMessage = 'Link para cadastro: https://sites.google.com/view/solucoes-em-ia\n\nTer um(a) Assistente Virtual que atende seus clientes e qualifica LEADS com captação a partir de R$ 1.500,00\n\n*Pagamento 50% Assistente Virtial:* R$ 750,00 MercadoPago Pix E-mail vendamais@gmail.com ou com cartão\n\nTer os templates e arquivos de configurações prontos, mais nosso suporte remote pelo AnyDesk\n\n**Pagamento 50% pelos templates e arquivos de configurações prontos:\n\n* R$ 1.00,00 MercadoPago Pix E-mail vendamais@gmail.com ou com cartão\n\nAgende um contato: WhatsApp (12) 98.138.3348.';
+                                break;
+                            case '2':
+                                responseMessage = 'Link para cadastro: https://sites.google.com/view/solucoes-em-ia\n\nTenha 3 consultas mensais que vão otimizar seu negócio nas Soluções em IA e suporte via remoto através do AnyDesk *Assinatura Mensal:* R$ 99,90 MercadoPago Pix E-mail vendamais@gmail.com ou com cartão\n\nAgende um contato: WhatsApp (12) 98.138.3348.';
+                                break;
+                            case '3':
+                                responseMessage = 'Link para cadastro: https://sites.google.com/view/solucoes-em-ia\n\nSaiba, antes que seja tarde, com quem se relaciona, quem lhe deu um golpe ou de quem você desconfia, a partir de qualquer pequena informação ou detalhe, cpf, nome completo, endereço, cep, placa de carro e outros.\nPequeno Dossiê R$ 75,00.\nMédio Dossiê R$ 150;00.\nCompleto Dossiê R$ 300,00.\n Assinatura Mensal R$ 150,00, com direito a 3 consultas mensais - Cada consulta adicional, R$ 100,00\nPix MercadoPago E-mail vendamais@gmail.com ou com cartão\n\nAgende um contato: WhatsApp (12) 98.138.3348.';
+                                break;
+                            case '4':
+                                responseMessage = 'Agende um contato: WhatsApp (12) 98.138.3348.';
+                                break;
+                            case '5:
+                                responseMessage = 'Se tiver outras dúvidas ou precisar de mais informações, por favor, escreva aqui, visite nosso site: https://sites.google.com/view/solucoes-em-ia/\n\n ou Agende um contato: WhatsApp (12) 98.138.3348.';
+                                break;
                 default:
                     responseMessage = 'Opção inválida.';
             }

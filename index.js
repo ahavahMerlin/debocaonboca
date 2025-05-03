@@ -7,68 +7,86 @@ const chromium = require('@sparticuz/chromium');
 const app = express();
 const port = process.env.PORT || 3000;
 const DATA_FILE = 'data.json';
-const KEEP_ALIVE_INTERVAL = 300000; // 5 minutos
+const KEEP_ALIVE_INTERVAL = 300000; // 5 minutos (em milissegundos)
 
-// Função para carregar os dados
+// ---------------------- Funções Utilitárias ----------------------
+
+// Carrega os dados do arquivo JSON
 async function loadData() {
     try {
         const data = await fsExtra.readJson(DATA_FILE);
+        console.log('Dados carregados com sucesso:', data); // Log para verificar os dados
         return data;
     } catch (err) {
-        console.warn('Erro ao carregar os dados:', err);
-        return [];
+        console.warn('Erro ao carregar os dados (pode ser a primeira execução):', err);
+        return []; // Retorna um array vazio para evitar erros
     }
 }
 
-// Função para salvar os dados
+// Salva os dados no arquivo JSON
 async function saveData(data) {
     try {
         await fsExtra.writeJson(DATA_FILE, data, { spaces: 2 });
+        console.log('Dados salvos com sucesso:', data); // Log para verificar os dados
     } catch (err) {
         console.error('Erro ao salvar os dados:', err);
     }
 }
 
-// Função de delay
+// Função de delay (para simular digitação)
 function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// Função para inicializar o cliente WhatsApp
+// ---------------------- Inicialização do Cliente WhatsApp ----------------------
 async function initializeClient() {
     let executablePath;
 
     if (process.env.RENDER) {
+        // Para ambientes de produção (Render), usa o Chromium do @sparticuz
         executablePath = await chromium.executablePath();
     } else {
-        executablePath = null; // Ou deixe como null para usar o Chrome padrão
+        // Para desenvolvimento local, usa o Chrome instalado (se disponível)
+        executablePath = null; // ou deixe vazio para usar o Chrome padrão
     }
 
     const client = new Client({
         authStrategy: new LocalAuth(),
         puppeteer: {
-            headless: true,
-            executablePath: executablePath,
-            args: chromium.args,
-            //  defaultViewport: null, //Removido, pode causar problemas em alguns casos
-            timeout: 60000
+            headless: true, // Executa o Chrome em modo headless (sem interface gráfica)
+            executablePath: executablePath, // Caminho para o executável do Chrome
+            args: chromium.args, // Argumentos do Chromium (necessários no Render)
+            timeout: 60000 // Tempo limite para as operações do Puppeteer (em milissegundos)
         }
     });
 
+    // Evento: QR Code gerado
     client.on('qr', qr => {
         console.log('QR Code recebido:', qr);
         qrcode.generate(qr, { small: true });
         console.log('QR Code gerado. Escaneie com o WhatsApp.');
     });
 
+    // Evento: Falha na autenticação
     client.on('auth_failure', msg => {
         console.error('Falha na autenticação:', msg);
     });
 
-    client.on('disconnected', (reason) => {
+    // Evento: Desconexão
+    client.on('disconnected', async (reason) => {
         console.log('Cliente desconectado:', reason);
+        console.log('Tentando reconectar...');
+        try {
+            await client.logout(); // Tenta fazer o logout
+            await client.destroy(); // Destrói a sessão atual
+            console.log('Sessão finalizada, reiniciando cliente...');
+            setTimeout(start, 5000); // Reinicia o cliente após 5 segundos
+        } catch (error) {
+            console.error('Erro ao fazer logout ou destruir a sessão:', error);
+        }
     });
 
+    // Evento: Cliente pronto (conectado)
     client.on('ready', () => {
         console.log('Tudo certo! WhatsApp conectado.');
 
@@ -81,15 +99,18 @@ async function initializeClient() {
         }, KEEP_ALIVE_INTERVAL);
     });
 
+    // Evento: Autenticado
     client.on('authenticated', (session) => {
         console.log('Autenticado com sucesso! Dados da sessão:', session);
     });
 
+    // Evento: Mensagem recebida
     client.on('message', async msg => {
         try {
             const inicioProcessamento = Date.now();
             console.log(`Mensagem recebida: ${msg.body} de ${msg.from}`);
 
+            // Verifica se a mensagem corresponde aos critérios do menu
             if (msg.body.match(/(menu|Menu|dia|tarde|noite|oi|Oi|Olá|olá|ola|Ola)/i) && msg.from.endsWith('@c.us')) {
                 console.log(`Mensagem corresponde aos critérios, iniciando processamento...`);
 
@@ -99,6 +120,7 @@ async function initializeClient() {
                 await delay(500);
                 await chat.sendStateTyping();
                 await delay(500);
+
                 const contact = await msg.getContact();
                 console.log(`Informações do contato obtidas.`);
 
@@ -114,6 +136,7 @@ async function initializeClient() {
                 await chat.sendStateTyping();
                 await delay(500);
 
+                // Cria objeto com dados do usuário
                 const userData = {
                     whatsapp: msg.from.replace('@c.us', ''),
                     nome: name,
@@ -121,76 +144,26 @@ async function initializeClient() {
                     opcoes_escolhidas: []
                 };
 
+                // Carrega os dados existentes
                 let existingData = await loadData();
                 existingData = Array.isArray(existingData) ? existingData : [];
+
+                // Adiciona os novos dados
                 existingData.push(userData);
 
+                // Salva os dados atualizados
                 await saveData(existingData);
-            } else if (['1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(msg.body) && msg.from.endsWith('@c.us')) {
-                await handleOption(msg.body);
+            }
+            // Verifica se a mensagem é uma opção válida (1 a 9)
+            else if (['1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(msg.body) && msg.from.endsWith('@c.us')) {
+                // Chama a função para lidar com a opção
+                await handleOption(msg.body, msg, client);
             }
 
             const fimProcessamento = Date.now();
             const tempoTotal = (fimProcessamento - inicioProcessamento) / 1000;
             console.log(`Tempo total de processamento da mensagem: ${tempoTotal} segundos.`);
 
-            async function handleOption(option) {
-                if (msg.from.endsWith('@c.us')) {
-                    try {
-                        const chat = await msg.getChat();
-
-                        await delay(500);
-                        await chat.sendStateTyping();
-                        await delay(500);
-
-                        let responseMessage = '';
-
-                        switch (option) {
-                            case '1':
-                                responseMessage = 'Link para cadastro: https://sites.google.com/view/solucoes-em-ia\n\nReceba o passo a passo, templates e arquivos de configuração, damos suporte na instalação via remoto através do AnyDesk *Pagamento:* A partir de R$ 500,00 à vista MercadoPago Pix E-mail vendamais@gmail.com ou com cartão.';
-                                break;
-                            case '2':
-                                responseMessage = 'Link para cadastro: https://sites.google.com/view/solucoes-em-ia\n\nTenha 3 consultas mensais que vão otimizar seu negócio nas Soluções em IA e suporte via remoto através do AnyDesk *Assinatura Mensal:* R$ 99,90 à vista MercadoPago Pix E-mail vendamais@gmail.com pode pagar com cartão.';
-                                break;
-                            case '3':
-                                responseMessage = 'Informações ao final na página e Link para cadastro: https://sites.google.com/view/solucoes-em-ia';
-                                break;
-                            case '4':
-                                responseMessage = 'DeBocaOnBoca Energia Solar: https://debocaembocaenergiasolar.vendasmais.com/';
-                                break;
-                            case '5':
-                                responseMessage = 'Link para cadastro: https://sites.google.com/view/solucoes-em-ia\n\nSaiba, antes que seja tarde, com quem se relaciona, quem lhe deu um golpe ou de quem você desconfia, a partir de qualquer pequena informação ou detalhe, cpf, nome completo, endereço, cep, placa de carro e outros.\nPequeno Dossiê R$ 75,00.\nMédio Dossiê R$ 150;00.\nCompleto Dossiê R$ 300,00.\n Assinatura Mensal R$ 150,00, com direito a 3 consultas mensais - Cada consulta adicional, R$ 100,00\nPix MercadoPago E-mail vendamais@gmail.com.\nWhatsApp (12) 99.750.7961.';
-                                break;
-                            case '6':
-                                responseMessage = 'Link para cadastro: https://sites.google.com/view/debocaonboca-repeteco';
-                                break;
-                            case '7':
-                                responseMessage = 'Serviço presencial, agendar entre em contato: WhatsApp (12) 99.750.7961.';
-                                break;
-                            case '8':
-                                responseMessage = 'Entre em contato: WhatsApp (12) 99.750.7961.';
-                                break;
-                            case '9':
-                                responseMessage = 'Se tiver outras dúvidas ou precisar de mais informações, por favor, escreva aqui ou visite nosso site: https://sites.google.com/view/solucoes-em-ia/';
-                                break;
-                            default:
-                                responseMessage = 'Opção inválida.';
-                        }
-
-                        await client.sendMessage(msg.from, responseMessage);
-
-                        let existingData = await loadData();
-                        existingData = Array.isArray(existingData) ? existingData : [];
-                        const userIndex = existingData.findIndex(user => user.whatsapp === msg.from.replace('@c.us', ''));
-                        if (userIndex !== -1) {
-                            existingData[userIndex].opcoes_escolhidas.push(option);
-                            await saveData(existingData);
-                        }
-                    } catch (error) {
-                        console.error('Erro ao lidar com a opção:', error);
-                    }
-                }
-            }
         } catch (error) {
             console.error('Erro ao processar a mensagem:', error);
         }
@@ -199,7 +172,72 @@ async function initializeClient() {
     return client;
 }
 
-// Inicialização do Express
+// Função para lidar com as opções do menu
+async function handleOption(option, msg, client) {
+    if (msg.from.endsWith('@c.us')) {
+        try {
+            const chat = await msg.getChat();
+
+            await delay(500);
+            await chat.sendStateTyping();
+            await delay(500);
+
+            let responseMessage = '';
+
+            switch (option) {
+                case '1':
+                    responseMessage = 'Link para cadastro: https://sites.google.com/view/solucoes-em-ia\n\nReceba o passo a passo, templates e arquivos de configuração, damos suporte na instalação via remoto através do AnyDesk *Pagamento:* A partir de R$ 500,00 à vista MercadoPago Pix E-mail vendamais@gmail.com ou com cartão.';
+                    break;
+                case '2':
+                    responseMessage = 'Link para cadastro: https://sites.google.com/view/solucoes-em-ia\n\nTenha 3 consultas mensais que vão otimizar seu negócio nas Soluções em IA e suporte via remoto através do AnyDesk *Assinatura Mensal:* R$ 99,90 à vista MercadoPago Pix E-mail vendamais@gmail.com pode pagar com cartão.';
+                    break;
+                case '3':
+                    responseMessage = 'Informações ao final na página e Link para cadastro: https://sites.google.com/view/solucoes-em-ia';
+                    break;
+                case '4':
+                    responseMessage = 'DeBocaOnBoca Energia Solar: https://debocaembocaenergiasolar.vendasmais.com/';
+                    break;
+                case '5':
+                    responseMessage = 'Link para cadastro: https://sites.google.com/view/solucoes-em-ia\n\nSaiba, antes que seja tarde, com quem se relaciona, quem lhe deu um golpe ou de quem você desconfia, a partir de qualquer pequena informação ou detalhe, cpf, nome completo, endereço, cep, placa de carro e outros.\nPequeno Dossiê R$ 75,00.\nMédio Dossiê R$ 150;00.\nCompleto Dossiê R$ 300,00.\n Assinatura Mensal R$ 150,00, com direito a 3 consultas mensais - Cada consulta adicional, R$ 100,00\nPix MercadoPago E-mail vendamais@gmail.com.\nWhatsApp (12) 99.750.7961.';
+                    break;
+                case '6':
+                    responseMessage = 'Link para cadastro: https://sites.google.com/view/debocaonboca-repeteco';
+                    break;
+                case '7':
+                    responseMessage = 'Serviço presencial, agendar entre em contato: WhatsApp (12) 99.750.7961.';
+                    break;
+                case '8':
+                    responseMessage = 'Entre em contato: WhatsApp (12) 99.750.7961.';
+                    break;
+                case '9':
+                    responseMessage = 'Se tiver outras dúvidas ou precisar de mais informações, por favor, escreva aqui ou visite nosso site: https://sites.google.com/view/solucoes-em-ia/';
+                    break;
+                default:
+                    responseMessage = 'Opção inválida.';
+            }
+
+            // Envia a mensagem de resposta
+            await client.sendMessage(msg.from, responseMessage);
+
+            // Carrega os dados existentes
+            let existingData = await loadData();
+            existingData = Array.isArray(existingData) ? existingData : [];
+
+            // Encontra o índice do usuário
+            const userIndex = existingData.findIndex(user => user.whatsapp === msg.from.replace('@c.us', ''));
+
+            // Se o usuário existe, atualiza as opções escolhidas
+            if (userIndex !== -1) {
+                existingData[userIndex].opcoes_escolhidas.push(option);
+                await saveData(existingData);
+            }
+        } catch (error) {
+            console.error('Erro ao lidar com a opção:', error);
+        }
+    }
+}
+
+// ---------------------- Inicialização do Servidor Express ----------------------
 app.get('/', (req, res) => {
     res.send('Servidor está rodando! Chatbot WhatsApp DeBocaOnBoca.');
 });
@@ -208,7 +246,7 @@ app.listen(port, () => {
     console.log(`Servidor Express rodando na porta ${port}`);
 });
 
-// Inicialização do cliente WhatsApp
+// ---------------------- Função Principal de Inicialização ----------------------
 async function start() {
     try {
         const client = await initializeClient();
@@ -218,4 +256,5 @@ async function start() {
     }
 }
 
+// Inicia o processo
 start();

@@ -15,11 +15,11 @@ const KEEP_ALIVE_INTERVAL = 300000; // 5 minutos (em milissegundos)
 async function loadData() {
     try {
         const data = await fsExtra.readJson(DATA_FILE);
-        console.log('Dados carregados com sucesso:', data); // Log para verificar os dados
+        console.log('Dados carregados com sucesso:', data);
         return data;
     } catch (err) {
         console.warn('Erro ao carregar os dados (pode ser a primeira execução):', err);
-        return []; // Retorna um array vazio para evitar erros
+        return [];
     }
 }
 
@@ -27,7 +27,7 @@ async function loadData() {
 async function saveData(data) {
     try {
         await fsExtra.writeJson(DATA_FILE, data, { spaces: 2 });
-        console.log('Dados salvos com sucesso:', data); // Log para verificar os dados
+        console.log('Dados salvos com sucesso:', data);
     } catch (err) {
         console.error('Erro ao salvar os dados:', err);
     }
@@ -40,8 +40,8 @@ function delay(ms) {
 
 // ---------------------- Inicialização do Cliente WhatsApp ----------------------
 async function initializeClient() {
-    let executablePath;
-    let useChrome = false; // Variável para controlar o uso do Chrome
+    let executablePath = null;
+    let headlessMode = true; // Modo headless padrão
 
     if (process.env.RENDER) {
         // Para ambientes de produção (Render), usa o Chromium do @sparticuz
@@ -50,24 +50,20 @@ async function initializeClient() {
             console.log('Chromium executável encontrado:', executablePath);
         } catch (error) {
             console.error('Erro ao obter o caminho do executável do Chromium:', error);
-            executablePath = null; // Em caso de erro, define como null
+            executablePath = null;
         }
     } else {
         // Para desenvolvimento local, tenta usar o Chrome instalado
-        executablePath = null;
-        useChrome = true; // Indica que devemos tentar usar o Chrome local
         console.log('Usando o Chrome instalado localmente (se disponível).');
     }
 
     const client = new Client({
         authStrategy: new LocalAuth(),
         puppeteer: {
-            headless: true, // Executa o Chrome em modo headless (sem interface gráfica)
+            headless: headlessMode, // Define o modo headless
             executablePath: executablePath, // Caminho para o executável do Chrome
             args: chromium.args, // Argumentos do Chromium (necessários no Render)
-            ignoreDefaultArgs: useChrome ? ['--disable-extensions'] : [], // Desativa extensões se usar Chrome
-            //  defaultViewport: null, // Removido para evitar problemas em alguns casos
-            timeout: 60000 // Tempo limite para as operações do Puppeteer (em milissegundos)
+            timeout: 60000, // Tempo limite para as operações do Puppeteer (em milissegundos)
         }
     });
 
@@ -88,10 +84,10 @@ async function initializeClient() {
         console.log('Cliente desconectado:', reason);
         console.log('Tentando reconectar...');
         try {
-            await client.logout(); // Tenta fazer o logout
-            await client.destroy(); // Destrói a sessão atual
+            await client.logout();
+            await client.destroy();
             console.log('Sessão finalizada, reiniciando cliente...');
-            setTimeout(start, 5000); // Reinicia o cliente após 5 segundos
+            setTimeout(start, 5000);
         } catch (error) {
             console.error('Erro ao fazer logout ou destruir a sessão:', error);
         }
@@ -103,7 +99,6 @@ async function initializeClient() {
 
         // Keep-alive
         setInterval(() => {
-            // Substitua 'SEU_NUMERO@c.us' pelo seu número de teste.
             client.sendMessage('5512997507961@c.us', 'Keep-alive ping')
                 .then(() => console.log('Keep-alive message sent.'))
                 .catch(error => console.error('Erro ao enviar keep-alive:', error));
@@ -119,7 +114,6 @@ async function initializeClient() {
     client.on('message', async msg => {
         try {
             const inicioProcessamento = Date.now();
-            //console.log(`Mensagem recebida: ${msg.body} de ${msg.from}`);
 
             // Verifica se a mensagem corresponde aos critérios do menu
             if (msg.body.match(/(menu|Menu|dia|tarde|noite|oi|Oi|Olá|olá|ola|Ola)/i) && msg.from.endsWith('@c.us')) {
@@ -166,7 +160,7 @@ async function initializeClient() {
                 await saveData(existingData);
             }
             // Verifica se a mensagem é uma opção válida (1 a 5)
-            else if (['1', '2', '3', '4', '5'].includes(msg.body) && msg.from.endsWith('@c.us')) {  // Removi 6 7 8 9 pois não existem opções
+            else if (['1', '2', '3', '4', '5'].includes(msg.body) && msg.from.endsWith('@c.us')) {
                 // Chama a função para lidar com a opção
                 await handleOption(msg.body, msg, client);
             }

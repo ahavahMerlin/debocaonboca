@@ -15,11 +15,11 @@ const KEEP_ALIVE_INTERVAL = 300000; // 5 minutos (em milissegundos)
 async function loadData() {
     try {
         const data = await fsExtra.readJson(DATA_FILE);
-        console.log('Dados carregados com sucesso:', data);
+        console.log('Dados carregados com sucesso:', data); // Log para verificar os dados
         return data;
     } catch (err) {
         console.warn('Erro ao carregar os dados (pode ser a primeira execução):', err);
-        return [];
+        return []; // Retorna um array vazio para evitar erros
     }
 }
 
@@ -27,7 +27,7 @@ async function loadData() {
 async function saveData(data) {
     try {
         await fsExtra.writeJson(DATA_FILE, data, { spaces: 2 });
-        console.log('Dados salvos com sucesso:', data);
+        console.log('Dados salvos com sucesso:', data); // Log para verificar os dados
     } catch (err) {
         console.error('Erro ao salvar os dados:', err);
     }
@@ -40,8 +40,8 @@ function delay(ms) {
 
 // ---------------------- Inicialização do Cliente WhatsApp ----------------------
 async function initializeClient() {
-    let executablePath = null;
-    let headlessMode = true; // Modo headless padrão
+    let executablePath;
+    let useChrome = false; // Variável para controlar o uso do Chrome
 
     if (process.env.RENDER) {
         // Para ambientes de produção (Render), usa o Chromium do @sparticuz
@@ -50,20 +50,23 @@ async function initializeClient() {
             console.log('Chromium executável encontrado:', executablePath);
         } catch (error) {
             console.error('Erro ao obter o caminho do executável do Chromium:', error);
-            executablePath = null;
+            executablePath = null; // Em caso de erro, define como null
         }
     } else {
         // Para desenvolvimento local, tenta usar o Chrome instalado
+        executablePath = null;
+        useChrome = true; // Indica que devemos tentar usar o Chrome local
         console.log('Usando o Chrome instalado localmente (se disponível).');
     }
 
     const client = new Client({
         authStrategy: new LocalAuth(),
         puppeteer: {
-            headless: headlessMode, // Define o modo headless
+            headless: true, // Executa o Chrome em modo headless (sem interface gráfica)
             executablePath: executablePath, // Caminho para o executável do Chrome
             args: chromium.args, // Argumentos do Chromium (necessários no Render)
-            timeout: 60000, // Tempo limite para as operações do Puppeteer (em milissegundos)
+            ignoreDefaultArgs: useChrome ? ['--disable-extensions'] : [], // Desativa extensões se usar Chrome
+            timeout: 60000 // Tempo limite para as operações do Puppeteer (em milissegundos)
         }
     });
 
@@ -84,10 +87,10 @@ async function initializeClient() {
         console.log('Cliente desconectado:', reason);
         console.log('Tentando reconectar...');
         try {
-            await client.logout();
-            await client.destroy();
+            await client.logout(); // Tenta fazer o logout
+            await client.destroy(); // Destrói a sessão atual
             console.log('Sessão finalizada, reiniciando cliente...');
-            setTimeout(start, 5000);
+            setTimeout(start, 5000); // Reinicia o cliente após 5 segundos
         } catch (error) {
             console.error('Erro ao fazer logout ou destruir a sessão:', error);
         }
@@ -99,6 +102,7 @@ async function initializeClient() {
 
         // Keep-alive
         setInterval(() => {
+            // Substitua 'SEU_NUMERO@c.us' pelo seu número de teste.
             client.sendMessage('5512997507961@c.us', 'Keep-alive ping')
                 .then(() => console.log('Keep-alive message sent.'))
                 .catch(error => console.error('Erro ao enviar keep-alive:', error));
@@ -114,6 +118,7 @@ async function initializeClient() {
     client.on('message', async msg => {
         try {
             const inicioProcessamento = Date.now();
+            console.log(`Mensagem recebida: ${msg.body} de ${msg.from}`);
 
             // Verifica se a mensagem corresponde aos critérios do menu
             if (msg.body.match(/(menu|Menu|dia|tarde|noite|oi|Oi|Olá|olá|ola|Ola)/i) && msg.from.endsWith('@c.us')) {
@@ -133,7 +138,7 @@ async function initializeClient() {
                 console.log(`Nome do contato: ${name}`);
 
                 // Envia a mensagem de boas-vindas formatada
-                await client.sendMessage(msg.from, `Olá! ${name.split(" ")[0]},\n\nSou Midiã represento a empresa DeBocaOnBoca. Como posso ajudá-lo(a) hoje?\n\nNão deixe de visitar e se inscrever em nosso Canal Youtube (https://www.youtube.com/@debocaemboca2024/videos?sub_confirmation=1)\n\nE seguir nosso Instagram (https://www.instagram.com/debocaemboca2024/)\n\nPor favor, digite o *número* da opção desejada abaixo:\n\n1 - Ter um(a) Assistente Virtual Humanizado que atende seus clientes e qualifica LEADS com captação a partir de R$ 1.500,00 ou ter os templates e arquivos de configurações prontos, mais nosso suporte remote pelo AnyDesk\n\n2 - Tenha 3 consultas mensais por pequena assinatura mensal, que vão otimizar seu negócio usando Soluções com Inteligência Artificial,\nEm diversas áreas\nEm CiberSegurança Famíliar, pequenas e Médias Empresas\nEm Marketing Digital\nEm Desenvolvimento de Aplicativos Mobile\n\n3 - Pequeno Dossiê; Médio ou Completo sobre quem lhe prejudicou, deu golpe ou quem de você desconfia ou por assinatura mensal R$ 150,00, com direito a 3 consultas mensais - Cada consulta adicional, R$ 100,00\n\n4 - Quer divulgação personalizada como esta, entre em contato\n\n5 - Outras perguntas`);
+                await client.sendMessage(msg.from, `Olá! ${name.split(" ")[0]},\n\nSou Assistente Virtual da empresa DeBocaOnBoca. Como posso ajudá-lo(a) hoje?\n\nNão deixe de visitar e se inscrever em nosso Canal Youtube (https://www.youtube.com/@debocaemboca2024/videos?sub_confirmation=1)\n\nE seguir nosso Instagram (https://www.instagram.com/debocaemboca2024/)\n\nPor favor, digite o *número* da opção desejada abaixo:\n\n1 - Ter um(a) Assistente Virtual Humanizado igual a este, atende clientes e qualifica LEADS com captação a partir de R$ 900,00 ou aprender a fazer um com templates e arquivos de configurações prontos\n\n2 - Tenha 3 consultas mensais por pequena assinatura mensal, que vão otimizar seu negócio usando Soluções com Inteligência Artificial,\nEm diversas áreas\nEm CiberSegurança Famíliar, pequenas e Médias Empresas\nEm Marketing Digital\nEm Desenvolvimento de Aplicativos Mobile\n\n3 - Ser nosso sócio(a) parceiro(a) com ganhos significativos em conta de participação\n\n4 - Economia de até 15% mensalmente e gratuitamente na sua conta de luz\n\n5 - Pequeno Dossiê; Médio ou Completo sobre quem lhe prejudicou, deu golpe ou quem de você desconfia ou por assinatura mensal R$ 150,00, com direito a 3 consultas mensais - Cada consulta adicional, R$ 100,00\n\n6 - Quer Renda Extra - Repeteco você vai se apaixonar\n\n7 - Backup completo do seu celular, antes que seja tarde\n\n8 - Quer divulgação personalizada como esta, entre em contato\n\n9 - Outras perguntas`);
 
                 console.log(`Mensagem de boas-vindas enviada.`);
 
@@ -159,8 +164,8 @@ async function initializeClient() {
                 // Salva os dados atualizados
                 await saveData(existingData);
             }
-            // Verifica se a mensagem é uma opção válida (1 a 5)
-            else if (['1', '2', '3', '4', '5'].includes(msg.body) && msg.from.endsWith('@c.us')) {
+            // Verifica se a mensagem é uma opção válida (1 a 9)
+            else if (['1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(msg.body) && msg.from.endsWith('@c.us')) {
                 // Chama a função para lidar com a opção
                 await handleOption(msg.body, msg, client);
             }
@@ -191,19 +196,31 @@ async function handleOption(option, msg, client) {
 
             switch (option) {
                 case '1':
-                    responseMessage = 'Link para cadastro: https://sites.google.com/view/solucoes-em-ia\n\nTer um(a) Assistente Virtual que atende seus clientes e qualifica LEADS com captação a partir de R$ 1.500,00\n\n*Pagamento 50% Assistente Virtial:* R$ 750,00 MercadoPago Pix E-mail vendamais@gmail.com ou com cartão\n\nTer os templates e arquivos de configurações prontos, mais nosso suporte remote pelo AnyDesk\n\n**Pagamento 50% pelos templates e arquivos de configurações prontos:\n\n* R$ 1.00,00 MercadoPago Pix E-mail vendamais@gmail.com ou com cartão\n\nAgende um contato: WhatsApp (12) 98.138.3348.';
+                    responseMessage = 'Link para cadastro: https://sites.google.com/view/solucoes-em-ia\n\nReceba o passo a passo, templates e arquivos de configuração, damos suporte na instalação via remoto através do AnyDesk *Pagamento:* A partir de R$ 500,00 à vista MercadoPago Pix E-mail vendamais@gmail.com ou com cartão.';
                     break;
                 case '2':
-                    responseMessage = 'Link para cadastro: https://sites.google.com/view/solucoes-em-ia\n\nTenha 3 consultas mensais que vão otimizar seu negócio nas Soluções em IA e suporte via remoto através do AnyDesk *Assinatura Mensal:* R$ 99,90 MercadoPago Pix E-mail vendamais@gmail.com ou com cartão\n\nAgende um contato: WhatsApp (12) 98.138.3348.';
+                    responseMessage = 'Link para cadastro: https://sites.google.com/view/solucoes-em-ia\n\nTenha 3 consultas mensais que vão otimizar seu negócio nas Soluções em IA e suporte via remoto através do AnyDesk *Assinatura Mensal:* R$ 99,90 à vista MercadoPago Pix E-mail vendamais@gmail.com pode pagar com cartão.';
                     break;
                 case '3':
-                    responseMessage = 'Link para cadastro: https://sites.google.com/view/solucoes-em-ia\n\nSaiba, antes que seja tarde, com quem se relaciona, quem lhe deu um golpe ou de quem você desconfia, a partir de qualquer pequena informação ou detalhe, cpf, nome completo, endereço, cep, placa de carro e outros.\nPequeno Dossiê R$ 75,00.\nMédio Dossiê R$ 150;00.\nCompleto Dossiê R$ 300,00.\n Assinatura Mensal R$ 150,00, com direito a 3 consultas mensais - Cada consulta adicional, R$ 100,00\nPix MercadoPago E-mail vendamais@gmail.com ou com cartão\n\nAgende um contato: WhatsApp (12) 98.138.3348.';
+                    responseMessage = 'Informações ao final na página e Link para cadastro: https://sites.google.com/view/solucoes-em-ia';
                     break;
                 case '4':
-                    responseMessage = 'Agende um contato: WhatsApp (12) 98.138.3348.';
+                    responseMessage = 'DeBocaOnBoca Energia Solar: https://debocaembocaenergiasolar.vendasmais.com/';
                     break;
                 case '5':
-                    responseMessage = 'Se tiver outras dúvidas ou precisar de mais informações, por favor, escreva aqui, visite nosso site: https://sites.google.com/view/solucoes-em-ia/\n\n ou Agende um contato: WhatsApp (12) 98.138.3348.';
+                    responseMessage = 'Link para cadastro: https://sites.google.com/view/solucoes-em-ia\n\nSaiba, antes que seja tarde, com quem se relaciona, quem lhe deu um golpe ou de quem você desconfia, a partir de qualquer pequena informação ou detalhe, cpf, nome completo, endereço, cep, placa de carro e outros.\nPequeno Dossiê R$ 75,00.\nMédio Dossiê R$ 150;00.\nCompleto Dossiê R$ 300,00.\n Assinatura Mensal R$ 150,00, com direito a 3 consultas mensais - Cada consulta adicional, R$ 100,00\nPix MercadoPago E-mail vendamais@gmail.com.\nWhatsApp (12) 99.750.7961.';
+                    break;
+                case '6':
+                    responseMessage = 'Link para cadastro: https://sites.google.com/view/debocaonboca-repeteco';
+                    break;
+                case '7':
+                    responseMessage = 'Serviço presencial, agendar entre em contato: WhatsApp (12) 99.750.7961.';
+                    break;
+                case '8':
+                    responseMessage = 'Entre em contato: WhatsApp (12) 99.750.7961.';
+                    break;
+                case '9':
+                    responseMessage = 'Se tiver outras dúvidas ou precisar de mais informações, por favor, escreva aqui ou visite nosso site: https://sites.google.com/view/solucoes-em-ia/';
                     break;
                 default:
                     responseMessage = 'Opção inválida.';

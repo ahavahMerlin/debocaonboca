@@ -14,7 +14,7 @@ const KEEP_ALIVE_INTERVAL = 300000; // 5 minutos (em milissegundos)
 async function loadData() {
     try {
         const data = await fsExtra.readJson(DATA_FILE);
-        console.log('Dados carregados com sucesso:', data);
+        // console.log('Dados carregados com sucesso:', data); // Remova ou comente esta linha
         return data;
     } catch (err) {
         console.warn('Erro ao carregar os dados (pode ser a primeira execução):', err);
@@ -26,7 +26,7 @@ async function loadData() {
 async function saveData(data) {
     try {
         await fsExtra.writeJson(DATA_FILE, data, { spaces: 2 });
-        console.log('Dados salvos com sucesso:', data);
+        // console.log('Dados salvos com sucesso:', data); // Remova ou comente esta linha
     } catch (err) {
         console.error('Erro ao salvar os dados:', err);
     }

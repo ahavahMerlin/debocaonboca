@@ -41,13 +41,22 @@ function delay(ms) {
 // ---------------------- Inicialização do Cliente WhatsApp ----------------------
 async function initializeClient() {
     let executablePath;
+    let useChrome = false; // Variável para controlar o uso do Chrome
 
     if (process.env.RENDER) {
         // Para ambientes de produção (Render), usa o Chromium do @sparticuz
-        executablePath = await chromium.executablePath();
+        try {
+            executablePath = await chromium.executablePath();
+            console.log('Chromium executável encontrado:', executablePath);
+        } catch (error) {
+            console.error('Erro ao obter o caminho do executável do Chromium:', error);
+            executablePath = null; // Em caso de erro, define como null
+        }
     } else {
-        // Para desenvolvimento local, usa o Chrome instalado (se disponível)
-        executablePath = null; // ou deixe vazio para usar o Chrome padrão
+        // Para desenvolvimento local, tenta usar o Chrome instalado
+        executablePath = null;
+        useChrome = true; // Indica que devemos tentar usar o Chrome local
+        console.log('Usando o Chrome instalado localmente (se disponível).');
     }
 
     const client = new Client({
@@ -56,6 +65,7 @@ async function initializeClient() {
             headless: true, // Executa o Chrome em modo headless (sem interface gráfica)
             executablePath: executablePath, // Caminho para o executável do Chrome
             args: chromium.args, // Argumentos do Chromium (necessários no Render)
+            ignoreDefaultArgs: useChrome ? ['--disable-extensions'] : [], // Desativa extensões se usar Chrome
             timeout: 60000 // Tempo limite para as operações do Puppeteer (em milissegundos)
         }
     });

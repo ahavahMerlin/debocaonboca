@@ -8,6 +8,40 @@ const port = process.env.PORT || 3000;
 const DATA_FILE = 'data.json';
 const KEEP_ALIVE_INTERVAL = 300000; // 5 minutos (em milissegundos)
 
+// Função para limpar a pasta de sessão
+async function clearSession() {
+    try {
+        console.log(`clearSession: Verificando a pasta de sessão: ${sessionPath}`);
+        if (fsExtra.existsSync(sessionPath)) {
+            console.log(`clearSession: A pasta de sessão existe. Excluindo...`);
+
+            // Adiciona um tempo de espera de 2 segundos
+            await delay(2000);
+
+            // Usa rimraf para excluir a pasta (versão promise)
+            rimraf(sessionPath, { glob: false }, (err) => {
+                if (err) {
+                    console.error(`clearSession: Erro ao excluir a pasta de sessão:`, err);
+                    console.log("clearSession: Não foi possível limpar a pasta de sessão, continuando...");
+                } else {
+                    console.log(`clearSession: Pasta de sessão excluída com sucesso usando rimraf.`);
+                }
+            });
+
+        } else {
+            console.log(`clearSession: A pasta de sessão não existe.`);
+        }
+    } catch (error) {
+        console.error(`clearSession: Erro ao limpar a pasta de sessão:`, error);
+        // **IMPORTANTE:** Se ocorrer um erro ao excluir a pasta,
+        // NÃO interrompa a inicialização. Apenas log o erro e continue.
+        // Isso permite que o bot tente se conectar mesmo que a pasta
+        // de sessão não tenha sido limpa.
+        console.log("clearSession: Não foi possível limpar a pasta de sessão, continuando...");
+    }
+}
+
+
 // ---------------------- Funções Utilitárias ----------------------
 
 // Carrega os dados do arquivo JSON

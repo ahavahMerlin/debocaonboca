@@ -9,7 +9,7 @@ const DATA_FILE = 'data.json';
 const KEEP_ALIVE_INTERVAL = 300000; // 5 minutos (em milissegundos)
 const CLIENT_ID = 'botLocal1'; // ID do cliente
 const SESSION_FOLDER = `./.wwebjs_auth/${CLIENT_ID}`; // Pasta de sessão baseada no ID do cliente
-const TEST_PHONE_NUMBER = '5512997507961'; // Número de telefone para teste
+const TEST_PHONE_NUMBER = process.env.TEST_PHONE_NUMBER || '5512997507961'; // Número de telefone para teste (variável de ambiente)
 
 // Função para limpar a pasta de sessão
 async function clearSession(sessionPath) {
@@ -90,7 +90,7 @@ async function initializeClient() {
             headless: headlessMode, // Define o modo headless
             executablePath: executablePath, // Caminho para o executável do Chrome
             args: chromium.args, // Argumentos do Chromium (necessários no Render)
-            timeout: 60000, // Tempo limite para as operações do Puppeteer (em milissegundos)
+            timeout: 90000, // Tempo limite para as operações do Puppeteer (em milissegundos)
         }
     });
 

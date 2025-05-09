@@ -7,9 +7,12 @@ const app = express();
 const port = process.env.PORT || 3000;
 const DATA_FILE = 'data.json';
 const KEEP_ALIVE_INTERVAL = 300000; // 5 minutos (em milissegundos)
+const CLIENT_ID = 'botLocal1'; // ID do cliente
+const SESSION_FOLDER = `./.wwebjs_auth/${CLIENT_ID}`; // Pasta de sessão baseada no ID do cliente
+const TEST_PHONE_NUMBER = '5512997507961'; // Número de telefone para teste
 
 // Função para limpar a pasta de sessão
-async function clearSession() {
+async function clearSession(sessionPath) {
     try {
         console.log(`clearSession: Verificando a pasta de sessão: ${sessionPath}`);
         if (fsExtra.existsSync(sessionPath)) {
@@ -18,16 +21,9 @@ async function clearSession() {
             // Adiciona um tempo de espera de 2 segundos
             await delay(2000);
 
-            // Usa rimraf para excluir a pasta (versão promise)
-            rimraf(sessionPath, { glob: false }, (err) => {
-                if (err) {
-                    console.error(`clearSession: Erro ao excluir a pasta de sessão:`, err);
-                    console.log("clearSession: Não foi possível limpar a pasta de sessão, continuando...");
-                } else {
-                    console.log(`clearSession: Pasta de sessão excluída com sucesso usando rimraf.`);
-                }
-            });
-
+            // Usa fsExtra.remove para excluir a pasta
+            await fsExtra.remove(sessionPath);
+            console.log(`clearSession: Pasta de sessão excluída com sucesso usando fsExtra.`);
         } else {
             console.log(`clearSession: A pasta de sessão não existe.`);
         }
@@ -41,14 +37,12 @@ async function clearSession() {
     }
 }
 
-
 // ---------------------- Funções Utilitárias ----------------------
 
 // Carrega os dados do arquivo JSON
 async function loadData() {
     try {
         const data = await fsExtra.readJson(DATA_FILE);
-        // console.log('Dados carregados com sucesso:', data); // Remova ou comente esta linha
         return data;
     } catch (err) {
         console.warn('Erro ao carregar os dados (pode ser a primeira execução):', err);
@@ -60,7 +54,6 @@ async function loadData() {
 async function saveData(data) {
     try {
         await fsExtra.writeJson(DATA_FILE, data, { spaces: 2 });
-        // console.log('Dados salvos com sucesso:', data); // Remova ou comente esta linha
     } catch (err) {
         console.error('Erro ao salvar os dados:', err);
     }
@@ -92,7 +85,7 @@ async function initializeClient() {
     }
 
     const client = new Client({
-        authStrategy: new LocalAuth(),
+        authStrategy: new LocalAuth({ clientId: CLIENT_ID }),
         puppeteer: {
             headless: headlessMode, // Define o modo headless
             executablePath: executablePath, // Caminho para o executável do Chrome
@@ -130,10 +123,11 @@ async function initializeClient() {
     // Evento: Cliente pronto (conectado)
     client.on('ready', () => {
         console.log('Tudo certo! WhatsApp conectado.');
+        console.log('Número do bot:', client.info.wid.user); // Adicione esta linha
 
         // Keep-alive
         setInterval(() => {
-            client.sendMessage('5512997507961@c.us', 'Keep-alive ping')
+            client.sendMessage(`${TEST_PHONE_NUMBER}@c.us`, 'Keep-alive ping')
                 .then(() => console.log('Keep-alive message sent.'))
                 .catch(error => console.error('Erro ao enviar keep-alive:', error));
         }, KEEP_ALIVE_INTERVAL);
@@ -277,6 +271,7 @@ app.listen(port, () => {
 
 async function start() {
     try {
+        await clearSession(SESSION_FOLDER);
         const client = await initializeClient();
         await client.initialize();
     } catch (error) {

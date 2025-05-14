@@ -3,6 +3,7 @@ const { Client, LocalAuth } = require('whatsapp-web.js');
 const fsExtra = require('fs-extra');
 const express = require('express');
 const chromium = require('@sparticuz/chromium');
+
 const app = express();
 const port = process.env.PORT || 3000;
 const DATA_FILE = 'data.json';
@@ -21,8 +22,12 @@ async function clearSession(sessionPath) {
     await delay(2000);
 
     // Usa fsExtra.remove para excluir a pasta
-    await fsExtra.remove(sessionPath);
-    console.log(`clearSession: Pasta de sessão excluída com sucesso usando fsExtra.`);
+    try {
+      await fsExtra.remove(sessionPath);
+      console.log(`clearSession: Pasta de sessão excluída com sucesso usando fsExtra.`);
+    } catch (err) {
+      console.error(`clearSession: Erro ao excluir a pasta de sessão:`, err);
+    }
   } else {
     console.log(`clearSession: A pasta de sessão não existe.`);
   }
@@ -32,6 +37,8 @@ async function deleteChromeDebugLog() {
   const logFilePath = `${SESSION_FOLDER}/Default/chrome_debug.log`;
   try {
     if (fsExtra.existsSync(logFilePath)) {
+      // Adiciona um atraso de 1 segundo antes de excluir
+      await delay(1000);
       await fsExtra.unlink(logFilePath);
       console.log(`Arquivo chrome_debug.log excluído com sucesso.`);
     } else {
@@ -120,7 +127,13 @@ async function initializeClient() {
   client.on('disconnected', (reason) => {
     console.log('Cliente desconectado:', reason);
     console.log('Tentando reconectar em 10 segundos...');
-    setTimeout(start, 10000);
+    // Limpa a sessão antes de tentar reconectar. Isso pode ajudar a resolver problemas de desconexão.
+    clearSession(SESSION_FOLDER).then(() => {
+        // Tenta excluir o arquivo de log após limpar a sessão
+        deleteChromeDebugLog().then(() => {
+            setTimeout(start, 10000);
+        });
+    });
   });
 
   // Evento: Cliente pronto (conectado)
@@ -274,8 +287,6 @@ app.listen(port, () => {
 
 async function start() {
   try {
-    //Removido o try catch do clearSession
-    //await clearSession(SESSION_FOLDER); //Removido pois agora só limpa em caso de falha de autenticação
     const client = await initializeClient();
     await client.initialize();
   } catch (error) {

@@ -3,7 +3,6 @@ const { Client, LocalAuth } = require('whatsapp-web.js');
 const fsExtra = require('fs-extra');
 const express = require('express');
 const chromium = require('@sparticuz/chromium');
-
 const app = express();
 const port = process.env.PORT || 3000;
 const DATA_FILE = 'data.json';
@@ -11,8 +10,6 @@ const KEEP_ALIVE_INTERVAL = 300000; // 5 minutos (em milissegundos)
 const CLIENT_ID = 'botLocal1'; // ID do cliente
 const SESSION_FOLDER = `./.wwebjs_auth/${CLIENT_ID}`; // Pasta de sessão baseada no ID do cliente
 const TEST_PHONE_NUMBER = process.env.TEST_PHONE_NUMBER || '5512997507961'; // Número de telefone para teste (variável de ambiente)
-const MAX_RETRIES = 3; // Número máximo de tentativas de reconexão
-let retryCount = 0;   // Contador de tentativas de reconexão
 
 // Função para limpar a pasta de sessão
 async function clearSession(sessionPath) {
@@ -24,12 +21,8 @@ async function clearSession(sessionPath) {
     await delay(2000);
 
     // Usa fsExtra.remove para excluir a pasta
-    try {
-      await fsExtra.remove(sessionPath);
-      console.log(`clearSession: Pasta de sessão excluída com sucesso usando fsExtra.`);
-    } catch (err) {
-      console.error(`clearSession: Erro ao excluir a pasta de sessão:`, err);
-    }
+    await fsExtra.remove(sessionPath);
+    console.log(`clearSession: Pasta de sessão excluída com sucesso usando fsExtra.`);
   } else {
     console.log(`clearSession: A pasta de sessão não existe.`);
   }
@@ -39,8 +32,6 @@ async function deleteChromeDebugLog() {
   const logFilePath = `${SESSION_FOLDER}/Default/chrome_debug.log`;
   try {
     if (fsExtra.existsSync(logFilePath)) {
-      // Adiciona um atraso de 1 segundo antes de excluir
-      await delay(1000);
       await fsExtra.unlink(logFilePath);
       console.log(`Arquivo chrome_debug.log excluído com sucesso.`);
     } else {
@@ -115,34 +106,34 @@ async function initializeClient() {
     console.log('QR Code recebido:', qr);
     qrcode.generate(qr, { small: true });
     console.log('QR Code gerado. Escaneie com o WhatsApp.');
-    retryCount = 0; // Reseta o contador ao gerar um novo QR Code
   });
 
   // Evento: Falha na autenticação
-  client.on('auth_failure', async msg => {
+  client.on('auth_failure', msg => {
     console.error('Falha na autenticação:', msg);
-    await clearSession(SESSION_FOLDER); // limpa a sessão apenas se for inválida
-    console.log('Sessão inválida removida. Tentando novamente em 10 segundos...');
-    retryCount = 0; // Reseta o contador ao falhar na autenticação
-    setTimeout(start, 10000);
   });
 
   // Evento: Desconexão
-  client.on('disconnected', (reason) => {
+  client.on('disconnected', async (reason) => {
     console.log('Cliente desconectado:', reason);
-    if (retryCount < MAX_RETRIES) {
-      console.log(`Tentando reconectar (tentativa ${retryCount + 1} de ${MAX_RETRIES}) em 10 segundos...`);
-      retryCount++;
-      // Limpa a sessão antes de tentar reconectar.
-      clearSession(SESSION_FOLDER).then(() => {
-          // Tenta excluir o arquivo de log após limpar a sessão
-          deleteChromeDebugLog().then(() => {
-              setTimeout(start, 10000);
-          });
-      });
-    } else {
-      console.error('Número máximo de tentativas de reconexão atingido. Reinicie o processo.');
-      // Você pode adicionar aqui lógica para notificar um administrador ou encerrar o processo.
+    console.log('Tentando reconectar...');
+    try {
+
+      // Adiciona um pequeno delay antes de fazer logout
+      await delay(1000);
+
+      // Tenta apagar o chrome_debug.log
+      await deleteChromeDebugLog();
+
+      // Destruir o cliente antes de fazer logout
+      await client.destroy();
+
+      await client.logout();
+
+      console.log('Sessão finalizada, reiniciando cliente...');
+      setTimeout(start, 10000); // Aumenta o tempo de reconexão
+    } catch (error) {
+      console.error('Erro ao fazer logout ou destruir a sessão:', error);
     }
   });
 
@@ -150,7 +141,6 @@ async function initializeClient() {
   client.on('ready', () => {
     console.log('Tudo certo! WhatsApp conectado.');
     console.log('Número do bot:', client.info.wid.user); // Adicione esta linha
-    retryCount = 0; // Reseta o contador quando a conexão é bem-sucedida
 
     // Keep-alive
     setInterval(() => {
@@ -298,6 +288,8 @@ app.listen(port, () => {
 
 async function start() {
   try {
+    //Removido o try catch do clearSession
+    await clearSession(SESSION_FOLDER);
     const client = await initializeClient();
     await client.initialize();
   } catch (error) {

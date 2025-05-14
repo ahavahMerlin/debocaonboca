@@ -21,8 +21,12 @@ async function clearSession(sessionPath) {
     await delay(2000);
 
     // Usa fsExtra.remove para excluir a pasta
-    await fsExtra.remove(sessionPath);
-    console.log(`clearSession: Pasta de sessão excluída com sucesso usando fsExtra.`);
+    try {
+      await fsExtra.remove(sessionPath);
+      console.log(`clearSession: Pasta de sessão excluída com sucesso usando fsExtra.`);
+    } catch (err) {
+      console.error(`clearSession: Erro ao excluir a pasta de sessão:`, err);
+    }
   } else {
     console.log(`clearSession: A pasta de sessão não existe.`);
   }
@@ -118,22 +122,20 @@ async function initializeClient() {
     console.log('Cliente desconectado:', reason);
     console.log('Tentando reconectar...');
     try {
+      // Tenta apagar o chrome_debug.log
+      await deleteChromeDebugLog();
 
       // Adiciona um pequeno delay antes de fazer logout
       await delay(1000);
 
-      // Tenta apagar o chrome_debug.log
-      await deleteChromeDebugLog();
-
       // Destruir o cliente antes de fazer logout
       await client.destroy();
-
-      await client.logout();
 
       console.log('Sessão finalizada, reiniciando cliente...');
       setTimeout(start, 10000); // Aumenta o tempo de reconexão
     } catch (error) {
       console.error('Erro ao fazer logout ou destruir a sessão:', error);
+      // Lidar com o erro de desconexão aqui (ex: log, notificação, etc.)
     }
   });
 
@@ -288,7 +290,6 @@ app.listen(port, () => {
 
 async function start() {
   try {
-    //Removido o try catch do clearSession
     await clearSession(SESSION_FOLDER);
     const client = await initializeClient();
     await client.initialize();

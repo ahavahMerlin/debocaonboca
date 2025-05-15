@@ -74,7 +74,7 @@ async function initializeClient() {
     let executablePath = null;
     let headlessMode = true;
 
-    if (process.env.RENDER) {
+    if (process.env.RENDER === 'true') {
         try {
             executablePath = await chromium.executablePath;
             console.log('Chromium executável encontrado:', executablePath);
@@ -93,6 +93,7 @@ async function initializeClient() {
             headless: headlessMode,
             executablePath: executablePath,
             args: chromium.args || [],  // Corrected: Provide a default empty array
+            timeout: 60000  // Aumentar o timeout para 60 segundos
         }
     });
 
@@ -115,7 +116,7 @@ async function initializeClient() {
         console.error('Falha na autenticação:', msg);
     });
 
-    client.on('disconnected', async (reason) => {
+   client.on('disconnected', async (reason) => {
         console.log('Cliente desconectado:', reason);
         console.log('Tentando reconectar...');
 

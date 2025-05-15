@@ -11,6 +11,9 @@ const CLIENT_ID = 'botLocal1';
 const SESSION_FOLDER = `./.wwebjs_auth/${CLIENT_ID}`;
 const TEST_PHONE_NUMBER = process.env.TEST_PHONE_NUMBER || '5512997507961';
 
+// 👉 Adicione esta linha
+process.env.PUPPETEER_EXECUTABLE_PATH = require('puppeteer').executablePath();
+
 function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }

@@ -16,47 +16,15 @@ function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function clearSession(sessionPath) {
-    console.log(`clearSession: Verificando a pasta de sessão: ${sessionPath}`);
-    if (fs.existsSync(sessionPath)) {
-        console.log(`clearSession: A pasta de sessão existe. Excluindo...`);
-        await delay(2000);
-        try {
-            await fs.remove(sessionPath);
-            console.log(`clearSession: Pasta de sessão excluída com sucesso usando fs.`);
-        } catch (err) {
-            console.error(`clearSession: Erro ao excluir a pasta de sessão:`, err);
-        }
-    } else {
-        console.log(`clearSession: A pasta de sessão não existe.`);
-    }
-}
-
-async function deleteChromeDebugLog() {
-    const logFilePath = `${SESSION_FOLDER}/Default/chrome_debug.log`;
-    try {
-        if (fs.existsSync(logFilePath)) {
-            await fs.unlink(logFilePath);
-            console.log(`Arquivo chrome_debug.log excluído com sucesso.`);
-        } else {
-            console.log(`Arquivo chrome_debug.log não existe.`);
-        }
-    } catch (error) {
-        console.warn(`Erro ao excluir chrome_debug.log:`, error);
-    }
-}
-
 async function loadData() {
     try {
         if (fs.existsSync(DATA_FILE)) {
             const data = await fs.readJson(DATA_FILE);
             return data;
         } else {
-            console.log('Arquivo data.json não encontrado. Retornando array vazio.');
             return [];
         }
-    } catch (err) {
-        console.warn('Erro ao carregar os dados:', err);
+    } catch {
         return [];
     }
 }
@@ -64,7 +32,6 @@ async function loadData() {
 async function saveData(data) {
     try {
         await fs.writeJson(DATA_FILE, data, { spaces: 2 });
-        console.log('Dados salvos com sucesso.');
     } catch (err) {
         console.error('Erro ao salvar os dados:', err);
     }
@@ -73,14 +40,15 @@ async function saveData(data) {
 async function initializeClient() {
     let executablePath = null;
     let headlessMode = true;
+    let puppeteerArgs = [];
 
     if (process.env.RENDER === 'true') {
         try {
             executablePath = await chromium.executablePath;
+            puppeteerArgs = chromium.args || [];
             console.log('Chromium executável encontrado:', executablePath);
         } catch (error) {
-            console.error('Erro ao obter o caminho do Chromium:', error);
-            // Log the error and continue, as Chromium may not be strictly required.
+            console.warn('Chromium não encontrado, continuando com valores padrão.');
         }
     } else {
         console.log('Usando Chrome local.');
@@ -91,66 +59,51 @@ async function initializeClient() {
         authStrategy: new LocalAuth({ clientId: CLIENT_ID }),
         puppeteer: {
             headless: headlessMode,
-            executablePath: executablePath,
-            args: chromium.args || [],  // Corrected: Provide a default empty array
-            timeout: 60000  // Aumentar o timeout para 60 segundos
+            executablePath: executablePath || undefined,
+            args: puppeteerArgs,
+            timeout: 60000
         }
     });
 
     client.on('qr', qr => {
-        console.log('QR Code recebido:', qr);
+        console.log('QR Code recebido:');
         qrcode.generate(qr, { small: true });
 
         qrcodeGenerator.toDataURL(qr, { type: 'image/png' }, (err, url) => {
-            if (err) {
-                console.error('Erro ao gerar o link do QR Code:', err);
-            } else {
-                console.log('Link do QR Code:', url);
-            }
+            if (!err) console.log('Link do QR Code:', url);
         });
-
-        console.log("TEST_PHONE_NUMBER:", process.env.TEST_PHONE_NUMBER);
     });
 
     client.on('auth_failure', msg => {
         console.error('Falha na autenticação:', msg);
     });
 
-   client.on('disconnected', async (reason) => {
+    client.on('disconnected', async (reason) => {
         console.log('Cliente desconectado:', reason);
-        console.log('Tentando reconectar...');
-
         await delay(5000);
-
         try {
             await client.destroy();
-            console.log('Sessão finalizada, reiniciando cliente...');
             start();
         } catch (error) {
             console.error('Erro ao destruir a sessão:', error);
-            console.log('Tentando reconectar novamente em 10 segundos...');
             setTimeout(start, 10000);
         }
     });
 
     client.on('ready', () => {
         console.log('WhatsApp conectado!');
-        console.log('Número do bot:', client.info.wid.user);
         setInterval(() => {
             client.sendMessage(`${TEST_PHONE_NUMBER}@c.us`, 'Keep-alive ping')
-                .then(() => console.log('Keep-alive message sent.'))
-                .catch(error => console.error('Erro ao enviar keep-alive:', error));
+                .catch(error => console.error('Erro no keep-alive:', error));
         }, KEEP_ALIVE_INTERVAL);
     });
 
     client.on('authenticated', (session) => {
-        console.log('Autenticado com sucesso!', session);
+        console.log('Autenticado com sucesso!');
     });
 
     client.on('message', async msg => {
         try {
-            const inicio = Date.now();
-
             if (msg.body.match(/(menu|dia|tarde|noite|oi|olá)/i) && msg.from.endsWith('@c.us')) {
                 const chat = await msg.getChat();
                 await delay(500);
@@ -168,26 +121,15 @@ async function initializeClient() {
                 };
 
                 let existingData = await loadData();
-                existingData = Array.isArray(existingData) ? existingData : [];
-
                 const userIndex = existingData.findIndex(u => u.whatsapp === userData.whatsapp);
 
-                if (userIndex === -1) {
-                    existingData.push(userData);
-                    console.log(`Novo usuário adicionado: ${userData.nome} (${userData.whatsapp})`);
-                } else {
-                    console.log(`Usuário já existe: ${existingData[userIndex].nome} (${existingData[userIndex].whatsapp})`);
-                }
-
+                if (userIndex === -1) existingData.push(userData);
                 await saveData(existingData);
 
                 await client.sendMessage(msg.from, `Como posso ajudar? Escolha uma opção:\n1. Cadastro\n2. Consultas mensais\n3. Sobre relacionamentos\n4. Agendar contato\n5. Dúvidas`);
             } else if (['1', '2', '3', '4', '5'].includes(msg.body)) {
                 await handleOption(msg.body, msg, client);
             }
-
-            const fim = Date.now();
-            console.log(`Processamento: ${(fim - inicio) / 1000} segundos`);
         } catch (error) {
             console.error('Erro ao processar mensagem:', error);
         }
@@ -217,7 +159,6 @@ async function handleOption(option, msg, client) {
         await client.sendMessage(msg.from, resposta);
 
         let existingData = await loadData();
-        existingData = Array.isArray(existingData) ? existingData : [];
         const userIndex = existingData.findIndex(u => u.whatsapp === msg.from.replace('@c.us', ''));
         if (userIndex !== -1) {
             existingData[userIndex].opcoes_escolhidas.push(option);
@@ -230,7 +171,6 @@ async function handleOption(option, msg, client) {
 
 async function start() {
     try {
-        //await clearSession(SESSION_FOLDER);
         const client = await initializeClient();
         await client.initialize();
 
@@ -239,12 +179,12 @@ async function start() {
         });
 
         app.listen(port, () => {
-            console.log(`Servidor Express rodando na porta ${port}`);
+            console.log(`Servidor rodando na porta ${port}`);
         }).on('error', err => {
             if (err.code === 'EADDRINUSE') {
-                console.error(`A porta ${port} já está em uso. Finalize o processo duplicado ou escolha outra porta.`);
+                console.error(`A porta ${port} já está em uso.`);
             } else {
-                console.error('Erro no servidor Express:', err);
+                console.error('Erro no servidor:', err);
             }
         });
 

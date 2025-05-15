@@ -1,9 +1,9 @@
 const qrcode = require('qrcode-terminal');
 const qrcodeGenerator = require('qrcode'); // Adicionado para gerar o link do QR Code
 const { Client, LocalAuth } = require('whatsapp-web.js');
-const fsExtra = require('fs-extra');
+const fs = require('fs-extra'); // Use 'fs-extra' para garantir consistência
 const express = require('express');
-const chromium = require('@sparticuz/chromium');
+const { chromium } = require('@sparticuz/chromium'); // Correção aqui: Importe corretamente
 const app = express();
 const port = process.env.PORT || 3000;
 const DATA_FILE = 'data.json';
@@ -12,14 +12,20 @@ const CLIENT_ID = 'botLocal1';
 const SESSION_FOLDER = `./.wwebjs_auth/${CLIENT_ID}`;
 const TEST_PHONE_NUMBER = process.env.TEST_PHONE_NUMBER || '5512997507961';
 
+// Função de delay (útil para pausas)
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+
 async function clearSession(sessionPath) {
     console.log(`clearSession: Verificando a pasta de sessão: ${sessionPath}`);
-    if (fsExtra.existsSync(sessionPath)) {
+    if (fs.existsSync(sessionPath)) {
         console.log(`clearSession: A pasta de sessão existe. Excluindo...`);
         await delay(2000);
         try {
-            await fsExtra.remove(sessionPath);
-            console.log(`clearSession: Pasta de sessão excluída com sucesso usando fsExtra.`);
+            await fs.remove(sessionPath);
+            console.log(`clearSession: Pasta de sessão excluída com sucesso usando fs.`);
         } catch (err) {
             console.error(`clearSession: Erro ao excluir a pasta de sessão:`, err);
         }
@@ -31,8 +37,8 @@ async function clearSession(sessionPath) {
 async function deleteChromeDebugLog() {
     const logFilePath = `${SESSION_FOLDER}/Default/chrome_debug.log`;
     try {
-        if (fsExtra.existsSync(logFilePath)) {
-            await fsExtra.unlink(logFilePath);
+        if (fs.existsSync(logFilePath)) {
+            await fs.unlink(logFilePath);
             console.log(`Arquivo chrome_debug.log excluído com sucesso.`);
         } else {
             console.log(`Arquivo chrome_debug.log não existe.`);
@@ -42,10 +48,11 @@ async function deleteChromeDebugLog() {
     }
 }
 
+
 async function loadData() {
     try {
-        if (fsExtra.existsSync(DATA_FILE)) { // Verifica se o arquivo existe antes de tentar ler
-            const data = await fsExtra.readJson(DATA_FILE);
+        if (fs.existsSync(DATA_FILE)) { // Verifica se o arquivo existe antes de tentar ler
+            const data = await fs.readJson(DATA_FILE);
             return data;
         } else {
             console.log('Arquivo data.json não encontrado. Retornando array vazio.');
@@ -59,16 +66,13 @@ async function loadData() {
 
 async function saveData(data) {
     try {
-        await fsExtra.writeJson(DATA_FILE, data, { spaces: 2 });
+        await fs.writeJson(DATA_FILE, data, { spaces: 2 });
         console.log('Dados salvos com sucesso.'); // Adicionado log de sucesso
     } catch (err) {
         console.error('Erro ao salvar os dados:', err);
     }
 }
 
-function delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
 
 async function initializeClient() {
     let executablePath = null;
@@ -76,7 +80,7 @@ async function initializeClient() {
 
     if (process.env.RENDER) {
         try {
-            executablePath = await chromium.executablePath();
+            executablePath = await chromium.executablePath;  // Corrected: Now correctly accesses executablePath
             console.log('Chromium executável encontrado:', executablePath);
         } catch (error) {
             console.error('Erro ao obter o caminho do Chromium:', error);
@@ -86,31 +90,32 @@ async function initializeClient() {
         headlessMode = false;
     }
 
+
     const client = new Client({
         authStrategy: new LocalAuth({ clientId: CLIENT_ID }),
         puppeteer: {
             headless: headlessMode,
             executablePath: executablePath,
-            args: chromium.args,
-            timeout: 0, //Removido o tempo limite. Isso pode causar problemas de consumo de memoria e processamento
+            args: chromium.args,  // Corrected: Directly use chromium.args
         }
     });
+
 
     client.on('qr', qr => {
         console.log('QR Code recebido:', qr);
         qrcode.generate(qr, { small: true });
 
-        // Gerar o link do QR Code
+
         qrcodeGenerator.toDataURL(qr, { type: 'image/png' }, (err, url) => {
             if (err) {
                 console.error('Erro ao gerar o link do QR Code:', err);
             } else {
                 console.log('Link do QR Code:', url);
-                // Aqui você pode exibir o link em sua interface, se necessário.
             }
         });
 
-        console.log("TEST_PHONE_NUMBER:", process.env.TEST_PHONE_NUMBER); // Mostra o número de telefone de teste
+
+        console.log("TEST_PHONE_NUMBER:", process.env.TEST_PHONE_NUMBER);
 
     });
 
@@ -122,17 +127,16 @@ async function initializeClient() {
         console.log('Cliente desconectado:', reason);
         console.log('Tentando reconectar...');
 
-        // Adicionado um atraso antes de tentar reconectar
-        await delay(5000); // Aguarda 5 segundos
+        await delay(5000);
 
         try {
             await client.destroy();
             console.log('Sessão finalizada, reiniciando cliente...');
-            start(); // Reinicia o cliente
+            start();
         } catch (error) {
             console.error('Erro ao destruir a sessão:', error);
             console.log('Tentando reconectar novamente em 10 segundos...');
-            setTimeout(start, 10000); // Tenta novamente após um atraso
+            setTimeout(start, 10000);
         }
     });
 
@@ -173,11 +177,9 @@ async function initializeClient() {
                 let existingData = await loadData();
                 existingData = Array.isArray(existingData) ? existingData : [];
 
-                // Verifica se o usuário já existe na base de dados
                 const userIndex = existingData.findIndex(u => u.whatsapp === userData.whatsapp);
 
                 if (userIndex === -1) {
-                    // Se não existe, adiciona o novo usuário
                     existingData.push(userData);
                     console.log(`Novo usuário adicionado: ${userData.nome} (${userData.whatsapp})`);
                 } else {
@@ -187,7 +189,6 @@ async function initializeClient() {
                 await saveData(existingData);
 
 
-                  // Envia o menu após salvar/verificar os dados do usuário
                   await client.sendMessage(msg.from, `Como posso ajudar? Escolha uma opção:\n1. Cadastro\n2. Consultas mensais\n3. Sobre relacionamentos\n4. Agendar contato\n5. Dúvidas`);
 
 

@@ -198,7 +198,7 @@ async function handleOption(option, msg, client) {
 
 async function start() {
   try {
-    await clearSession(SESSION_FOLDER);
+    //await clearSession(SESSION_FOLDER);
     const client = await initializeClient();
     await client.initialize();
 

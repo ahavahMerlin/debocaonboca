@@ -79,7 +79,7 @@ async function initializeClient() {
         }, KEEP_ALIVE_INTERVAL);
     });
 
-    client.on('authenticated', (session) => {
+    client.on('authenticated', () => {
         console.log('Autenticado com sucesso!');
     });
 

@@ -1,4 +1,5 @@
 const qrcode = require('qrcode-terminal');
+const qrcodeGenerator = require('qrcode'); // Adicionado para gerar o link do QR Code
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const fsExtra = require('fs-extra');
 const express = require('express');
@@ -98,6 +99,19 @@ async function initializeClient() {
     client.on('qr', qr => {
         console.log('QR Code recebido:', qr);
         qrcode.generate(qr, { small: true });
+
+        // Gerar o link do QR Code
+        qrcodeGenerator.toDataURL(qr, { type: 'image/png' }, (err, url) => {
+            if (err) {
+                console.error('Erro ao gerar o link do QR Code:', err);
+            } else {
+                console.log('Link do QR Code:', url);
+                // Aqui você pode exibir o link em sua interface, se necessário.
+            }
+        });
+
+        console.log("TEST_PHONE_NUMBER:", process.env.TEST_PHONE_NUMBER); // Mostra o número de telefone de teste
+
     });
 
     client.on('auth_failure', msg => {

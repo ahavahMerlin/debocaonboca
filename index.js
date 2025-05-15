@@ -85,7 +85,7 @@ async function initializeClient() {
       headless: headlessMode,
       executablePath: executablePath,
       args: chromium.args,
-      timeout: 120000,
+      timeout: 0, //Removido o tempo limite. Isso pode causar problemas de consumo de memoria e processamento
     }
   });
 
@@ -98,17 +98,21 @@ async function initializeClient() {
     console.error('Falha na autenticação:', msg);
   });
 
-  client.on('disconnected', async (reason) => {
+ client.on('disconnected', async (reason) => {
     console.log('Cliente desconectado:', reason);
     console.log('Tentando reconectar...');
+
+    // Adicionado um atraso antes de tentar reconectar
+    await delay(5000); // Aguarda 5 segundos
+
     try {
-      await deleteChromeDebugLog();
-      await delay(1000);
       await client.destroy();
       console.log('Sessão finalizada, reiniciando cliente...');
-      setTimeout(start, 10000);
+      start(); // Reinicia o cliente
     } catch (error) {
       console.error('Erro ao destruir a sessão:', error);
+      console.log('Tentando reconectar novamente em 10 segundos...');
+      setTimeout(start, 10000); // Tenta novamente após um atraso
     }
   });
 

@@ -3,7 +3,6 @@ const qrcodeGenerator = require('qrcode');
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const fs = require('fs-extra');
 const express = require('express');
-const { chromium } = require('@sparticuz/chromium');
 const app = express();
 const port = process.env.PORT || 3000;
 const DATA_FILE = 'data.json';
@@ -38,29 +37,11 @@ async function saveData(data) {
 }
 
 async function initializeClient() {
-    let executablePath = null;
-    let headlessMode = true;
-    let puppeteerArgs = [];
-
-    if (process.env.RENDER === 'true') {
-        try {
-            executablePath = await chromium.executablePath;
-            puppeteerArgs = chromium.args || [];
-            console.log('Chromium executável encontrado:', executablePath);
-        } catch (error) {
-            console.warn('Chromium não encontrado, continuando com valores padrão.');
-        }
-    } else {
-        console.log('Usando Chrome local.');
-        headlessMode = false;
-    }
-
     const client = new Client({
         authStrategy: new LocalAuth({ clientId: CLIENT_ID }),
         puppeteer: {
-            headless: headlessMode,
-            executablePath: executablePath || undefined,
-            args: puppeteerArgs,
+            headless: true,
+            args: ['--no-sandbox', '--disable-setuid-sandbox'],
             timeout: 60000
         }
     });

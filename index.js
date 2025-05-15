@@ -1,9 +1,9 @@
 const qrcode = require('qrcode-terminal');
-const qrcodeGenerator = require('qrcode'); // Adicionado para gerar o link do QR Code
+const qrcodeGenerator = require('qrcode');
 const { Client, LocalAuth } = require('whatsapp-web.js');
-const fs = require('fs-extra'); // Use 'fs-extra' para garantir consistência
+const fs = require('fs-extra');
 const express = require('express');
-const { chromium } = require('@sparticuz/chromium'); // Correção aqui: Importe corretamente
+const { chromium } = require('@sparticuz/chromium');
 const app = express();
 const port = process.env.PORT || 3000;
 const DATA_FILE = 'data.json';
@@ -12,11 +12,9 @@ const CLIENT_ID = 'botLocal1';
 const SESSION_FOLDER = `./.wwebjs_auth/${CLIENT_ID}`;
 const TEST_PHONE_NUMBER = process.env.TEST_PHONE_NUMBER || '5512997507961';
 
-// Função de delay (útil para pausas)
 function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
-
 
 async function clearSession(sessionPath) {
     console.log(`clearSession: Verificando a pasta de sessão: ${sessionPath}`);
@@ -48,15 +46,14 @@ async function deleteChromeDebugLog() {
     }
 }
 
-
 async function loadData() {
     try {
-        if (fs.existsSync(DATA_FILE)) { // Verifica se o arquivo existe antes de tentar ler
+        if (fs.existsSync(DATA_FILE)) {
             const data = await fs.readJson(DATA_FILE);
             return data;
         } else {
             console.log('Arquivo data.json não encontrado. Retornando array vazio.');
-            return []; // Retorna um array vazio se o arquivo não existir
+            return [];
         }
     } catch (err) {
         console.warn('Erro ao carregar os dados:', err);
@@ -67,12 +64,11 @@ async function loadData() {
 async function saveData(data) {
     try {
         await fs.writeJson(DATA_FILE, data, { spaces: 2 });
-        console.log('Dados salvos com sucesso.'); // Adicionado log de sucesso
+        console.log('Dados salvos com sucesso.');
     } catch (err) {
         console.error('Erro ao salvar os dados:', err);
     }
 }
-
 
 async function initializeClient() {
     let executablePath = null;
@@ -80,31 +76,29 @@ async function initializeClient() {
 
     if (process.env.RENDER) {
         try {
-            executablePath = await chromium.executablePath;  // Corrected: Now correctly accesses executablePath
+            executablePath = await chromium.executablePath;
             console.log('Chromium executável encontrado:', executablePath);
         } catch (error) {
             console.error('Erro ao obter o caminho do Chromium:', error);
+            // Log the error and continue, as Chromium may not be strictly required.
         }
     } else {
         console.log('Usando Chrome local.');
         headlessMode = false;
     }
 
-
     const client = new Client({
         authStrategy: new LocalAuth({ clientId: CLIENT_ID }),
         puppeteer: {
             headless: headlessMode,
             executablePath: executablePath,
-            args: chromium.args,  // Corrected: Directly use chromium.args
+            args: chromium.args || [],  // Corrected: Provide a default empty array
         }
     });
-
 
     client.on('qr', qr => {
         console.log('QR Code recebido:', qr);
         qrcode.generate(qr, { small: true });
-
 
         qrcodeGenerator.toDataURL(qr, { type: 'image/png' }, (err, url) => {
             if (err) {
@@ -114,9 +108,7 @@ async function initializeClient() {
             }
         });
 
-
         console.log("TEST_PHONE_NUMBER:", process.env.TEST_PHONE_NUMBER);
-
     });
 
     client.on('auth_failure', msg => {
@@ -188,10 +180,7 @@ async function initializeClient() {
 
                 await saveData(existingData);
 
-
-                  await client.sendMessage(msg.from, `Como posso ajudar? Escolha uma opção:\n1. Cadastro\n2. Consultas mensais\n3. Sobre relacionamentos\n4. Agendar contato\n5. Dúvidas`);
-
-
+                await client.sendMessage(msg.from, `Como posso ajudar? Escolha uma opção:\n1. Cadastro\n2. Consultas mensais\n3. Sobre relacionamentos\n4. Agendar contato\n5. Dúvidas`);
             } else if (['1', '2', '3', '4', '5'].includes(msg.body)) {
                 await handleOption(msg.body, msg, client);
             }
